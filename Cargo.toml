@@ -13,3 +13,4 @@ serde = { version = "1", features = ["derive"] } # for docopt
 toml = "0.7"
 serde_yaml = "0.9"
 serde_json = "1"
+array-lit = "0.2"

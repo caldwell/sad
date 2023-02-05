@@ -7,6 +7,9 @@ use std::fs::File;
 use std::io::{stdin,stdout};
 use docopt::Docopt;
 
+mod ruby;
+mod string;
+
 const USAGE: &'static str = "
 Usage:
   sad --help
@@ -42,6 +45,7 @@ enum Format {
     Yaml,
     Toml,
     Json,
+    Ruby,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -84,6 +88,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             Some(Format::Toml) => { let mut toml_str = String::new();
                                     inf.read_to_string(&mut toml_str)?;
                                     toml::from_str(&toml_str)? },
+            Some(_)            => Err("That format is not available as an input")?,
             None => unreachable!(),
         };
 
@@ -110,6 +115,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                                          outf.write(&mut toml_str.as_bytes())?; },
         (Some(Format::Toml), true)  => { let toml_str = toml::to_string(&data)?;
                                          outf.write(&mut toml_str.as_bytes())?; },
+        (Some(Format::Ruby), _)     => { let ruby_str = ruby::to_string(&data)?;
+                                         outf.write(&mut ruby_str.as_bytes())?; },
         (None,_) => unreachable!(),
     }
 
