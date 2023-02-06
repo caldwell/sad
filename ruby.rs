@@ -72,22 +72,68 @@ pub struct Serializer {
     output: StringWithLineLen,
     prefix: String,
     indent: String,
-    strser: StringSerializer<'static>,
+    lang: Language,
+}
+
+pub struct ArrLit(pub &'static str, pub &'static str, pub &'static str);
+impl ArrLit {
+    pub fn start(&self) -> &'static str { self.0 }
+    pub fn sep(&self)   -> &'static str { self.1 }
+    pub fn end(&self)   -> &'static str { self.2 }
+}
+
+pub struct TupLit(pub &'static str, pub &'static str, pub &'static str);
+impl TupLit {
+    pub fn start(&self) -> &'static str { self.0 }
+    pub fn sep(&self)   -> &'static str { self.1 }
+    pub fn end(&self)   -> &'static str { self.2 }
+}
+
+pub struct MapLit(pub &'static str, pub &'static str, pub &'static str, pub &'static str);
+impl MapLit {
+    pub fn start(&self) -> &'static str { self.0 }
+    pub fn keysep(&self)-> &'static str { self.1 }
+    pub fn sep(&self)   -> &'static str { self.2 }
+    pub fn end(&self)   -> &'static str { self.3 }
+}
+
+pub enum MapKey {
+    /// Keys are required to be quoted (such as JSON)
+    AlwaysQuote,
+    /// Valid identifiers don't need quoting (such as ecmascript). Everything else will be quoted.
+    NakedIdentifiers,
+}
+pub struct Language {
+    pub array_lit: ArrLit,
+    pub tuple_lit: TupLit,
+    pub map_lit:   MapLit,
+    pub map_key:   MapKey,
+    pub true_lit:  &'static str,
+    pub false_lit: &'static str,
+    pub null_lit:  &'static str,
+    pub strser:    StringSerializer<'static>,
 }
 
 pub fn to_string<'a, 'b, T: Serialize>(value: &'a T) -> Result<String> {
-    let mut serializer = Serializer::new();
+    let mut serializer = Serializer::new(Language{array_lit:  ArrLit("[", "," ,"]"),
+                                                  map_lit:    MapLit("{", " => ", ",", "}" ),
+                                                  tuple_lit:  TupLit("[", ",",  "]" ),
+                                                  map_key:    MapKey::AlwaysQuote,
+                                                  true_lit:  "true",
+                                                  false_lit: "false",
+                                                  null_lit:  "nil",
+                                                  strser: RubyStringSerializer::new(),},);
     serializer.to_string(value)
 }
 
 impl Serializer {
-    pub fn new() -> Serializer {
+    pub fn new(language: Language) -> Serializer {
         Serializer {
             op: VecDeque::new(),
             output: StringWithLineLen::new(),
             prefix: String::new(),
             indent: "  ".to_string(),
-            strser: RubyStringSerializer::new(),
+            lang: language,
         }
     }
     pub fn to_string<'a, T: Serialize>(&mut self, value: &'a T) -> Result<String> {
@@ -292,7 +338,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         self.serialize_str(&v.to_string())
     }
     fn serialize_str(self, v: &str) -> Result<()> {
-        *self += &self.strser.serialize(v, &self.prefix, None);
+        *self += &self.lang.strser.serialize(v, &self.prefix, None);
         Ok(())
     }
     fn serialize_bytes(self, v: &[u8]) -> Result<()> {
@@ -338,7 +384,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         Ok(())
     }
     fn serialize_seq(self, _len: Option<usize>) -> Result<Self::SerializeSeq> {
-        *self += "[";
+        *self += self.lang.array_lit.start();
         Ok(self)
     }
     fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple> {
@@ -355,7 +401,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
         Ok(self)
     }
     fn serialize_map(self, _len: Option<usize>) -> Result<Self::SerializeMap> {
-        *self += "{";
+        *self += self.lang.map_lit.start();
         Ok(self)
     }
     fn serialize_struct(self, name: &'static str, _len: usize,) -> Result<Self::SerializeStruct> {
@@ -377,10 +423,10 @@ impl<'a> ser::SerializeSeq for &'a mut Serializer {
     type Error = Error;
 
     fn serialize_element<T: ?Sized + Serialize>(&mut self, value: &T) -> Result<()> {
-        if self.ends_with("[") {
+        if self.ends_with(self.lang.array_lit.start()) {
             self.indent();
         } else {
-            **self += ",";
+            **self += self.lang.array_lit.sep();
             self.separator();
             self.newchunk();
         }
@@ -390,7 +436,7 @@ impl<'a> ser::SerializeSeq for &'a mut Serializer {
     // Close the sequence.
     fn end(self) -> Result<()> {
         self.outdent();
-        *self += "]";
+        *self += self.lang.array_lit.end();
         Ok(())
     }
 }
@@ -400,10 +446,10 @@ impl<'a> ser::SerializeTuple for &'a mut Serializer {
     type Error = Error;
 
     fn serialize_element<T: ?Sized + Serialize>(&mut self, value: &T) -> Result<()> {
-        if self.ends_with("[") {
+        if self.ends_with(self.lang.tuple_lit.start()) {
             self.indent();
         } else {
-            **self += ",";
+            **self += self.lang.tuple_lit.sep();
             self.separator();
             self.newchunk();
         }
@@ -412,7 +458,7 @@ impl<'a> ser::SerializeTuple for &'a mut Serializer {
 
     fn end(self) -> Result<()> {
         self.outdent();
-        *self += "]";
+        *self += self.lang.tuple_lit.end();
         Ok(())
     }
 }
@@ -422,10 +468,10 @@ impl<'a> ser::SerializeTupleStruct for &'a mut Serializer {
     type Error = Error;
 
     fn serialize_field<T: ?Sized + Serialize>(&mut self, value: &T) -> Result<()> {
-        if self.ends_with("[") {
+        if self.ends_with(self.lang.tuple_lit.start()) {
             self.indent();
         } else {
-            **self += ",";
+            **self += self.lang.tuple_lit.sep();
             self.separator();
             self.newchunk();
         }
@@ -434,7 +480,7 @@ impl<'a> ser::SerializeTupleStruct for &'a mut Serializer {
 
     fn end(self) -> Result<()> {
         self.outdent();
-        *self += "]";
+        *self += self.lang.tuple_lit.end();
         Ok(())
     }
 }
@@ -467,23 +513,23 @@ impl<'a> ser::SerializeMap for &'a mut Serializer {
     type Error = Error;
 
     fn serialize_key<T: ?Sized + Serialize>(&mut self, key: &T) -> Result<()> {
-        if self.ends_with("{") {
+        if self.ends_with(self.lang.map_lit.start()) {
             self.indent();
         } else {
-            **self += ",";
+            **self += self.lang.map_lit.sep();
             self.separator();
             self.newchunk();
         }
         key.serialize(&mut **self)
     }
     fn serialize_value<T: ?Sized + Serialize>(&mut self, value: &T) -> Result<()> {
-        **self += " => ";
+        **self += self.lang.map_lit.keysep();
         value.serialize(&mut **self)
     }
 
     fn end(self) -> Result<()> {
         self.outdent();
-        *self += "}";
+        *self += self.lang.map_lit.end();
         Ok(())
     }
 }
