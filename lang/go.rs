@@ -343,6 +343,7 @@ mod test_other {
 #[cfg(test)]
 mod test_strings {
     use super::*;
+    use crate::lang::string::test::*;
     fn ser(prefix: &str, name: Option<&str>, s: &str) -> String {
         let go_serializer = GoStringSerializer::new();
         let out = go_serializer.serialize(s,prefix,name);
@@ -383,51 +384,14 @@ r#""\x00\x01\x02\x03\x04\x05\x06\a\b\t\n\v\f\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x
     }
     #[test]
     fn test_source_code() {
-        assert_eq!(ser("", Some("some code"), r##"
-// What about a giant chunk of source code??
-#[derive(Debug, PartialEq)]
-enum RenderMode {
-    Multiline,
-    Singleline,
-}
-
-struct StringWithLineLen {
-    pub str: String,
-    pub linelen: usize,
-}
-
-impl StringWithLineLen {
-    fn new() -> StringWithLineLen {
-        StringWithLineLen { str: String::new(), linelen: 0 }
-    }
-}
-
-impl std::ops::AddAssign<&str> for StringWithLineLen {
-    fn add_assign(&mut self, s: &str) {
-        self.str += s;
-        if s == "\n" { // we only print newlines by themselves
-            self.linelen = 0;
-        } else {
-            self.linelen += s.len();
-        }
-    }
-}
-
-"##), r#""\n// What about a giant chunk of source code??\n#[derive(Debug, PartialEq)]\nenum RenderMode {\n    "+
+        assert_eq!(ser("", Some("some code"), source_code()),
+r#""\n// What about a giant chunk of source code??\n#[derive(Debug, PartialEq)]\nenum RenderMode {\n    "+
 "Multiline,\n    Singleline,\n}\n\nstruct StringWithLineLen {\n    pub str: String,\n    pub "+
 "linelen: usize,\n}\n\nimpl StringWithLineLen {\n    fn new() -> StringWithLineLen {\n        "+
 "StringWithLineLen { str: String::new(), linelen: 0 }\n    }\n}\n\nimpl std::ops::AddAssign<&str> for "+
 "StringWithLineLen {\n    fn add_assign(&mut self, s: &str) {\n        self.str += s;\n        if s == \"\\n\" { "+
 "// we only print newlines by themselves\n            self.linelen = 0;\n        } else {\n            "+
 "self.linelen += s.len();\n        }\n    }\n}\n\n""#);
-    }
-    fn gettysburg_address() -> &'static str {
-        r#"Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.
-
-    Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure. We are met on a great battle-field of that war. We have come to dedicate a portion of that field, as a final resting place for those who here gave their lives that that nation might live. It is altogether fitting and proper that we should do this.
-
-    But, in a larger sense, we can not dedicate—we can not consecrate—we can not hallow—this ground. The brave men, living and dead, who struggled here, have consecrated it, far above our poor power to add or detract. The world will little note, nor long remember what we say here, but it can never forget what they did here. It is for us the living, rather, to be dedicated here to the unfinished work which they who fought here have thus far so nobly advanced. It is rather for us to be here dedicated to the great task remaining before us—that from these honored dead we take increased devotion to that cause for which they gave the last full measure of devotion—that we here highly resolve that these dead shall not have died in vain—that this nation, under God, shall have a new birth of freedom—and that government of the people, by the people, for the people, shall not perish from the earth.
-"#
     }
     #[test]
     fn test_gettysburg() {
@@ -486,5 +450,3 @@ r#""Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with
 "ry_long_with_no_space_anywhere_in_sight_""#);
     }
 }
-
-

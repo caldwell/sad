@@ -188,6 +188,7 @@ fn test_enum() {
 
 #[test]
 fn test_strings() {
+    use crate::lang::string::test::*;
     let ruby_serializer = RubyStringSerializer::new();
     assert_eq!(ruby_serializer.serialize("\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f",
                                          "", None),
@@ -226,38 +227,8 @@ END"#);
                                          "", None), r#""'Lots' 'of' 'single' 'quotes'""#);
     assert_eq!(ruby_serializer.serialize(r#""Lots" "of" "double" "quotes""#,
                                          "", None), r#"'"Lots" "of" "double" "quotes"'"#);
-    assert_eq!(ruby_serializer.serialize(r##"
-// What about a giant chunk of source code??
-#[derive(Debug, PartialEq)]
-enum RenderMode {
-    Multiline,
-    Singleline,
-}
-
-struct StringWithLineLen {
-    pub str: String,
-    pub linelen: usize,
-}
-
-impl StringWithLineLen {
-    fn new() -> StringWithLineLen {
-        StringWithLineLen { str: String::new(), linelen: 0 }
-    }
-}
-
-impl std::ops::AddAssign<&str> for StringWithLineLen {
-    fn add_assign(&mut self, s: &str) {
-        self.str += s;
-        if s == "\n" { // we only print newlines by themselves
-            self.linelen = 0;
-        } else {
-            self.linelen += s.len();
-        }
-    }
-}
-
-"##,
-                                         "", Some("some code")), r#"<<~'SOME_CODE'
+    assert_eq!(ruby_serializer.serialize(source_code(), "", Some("some code")),
+r#"<<~'SOME_CODE'
 
 // What about a giant chunk of source code??
 #[derive(Debug, PartialEq)]
@@ -290,13 +261,7 @@ impl std::ops::AddAssign<&str> for StringWithLineLen {
 
 
 SOME_CODE"#);
-    let gettysburg_address = r#"Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived in Liberty, and dedicated to the proposition that all men are created equal.
-
-    Now we are engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, can long endure. We are met on a great battle-field of that war. We have come to dedicate a portion of that field, as a final resting place for those who here gave their lives that that nation might live. It is altogether fitting and proper that we should do this.
-
-    But, in a larger sense, we can not dedicate—we can not consecrate—we can not hallow—this ground. The brave men, living and dead, who struggled here, have consecrated it, far above our poor power to add or detract. The world will little note, nor long remember what we say here, but it can never forget what they did here. It is for us the living, rather, to be dedicated here to the unfinished work which they who fought here have thus far so nobly advanced. It is rather for us to be here dedicated to the great task remaining before us—that from these honored dead we take increased devotion to that cause for which they gave the last full measure of devotion—that we here highly resolve that these dead shall not have died in vain—that this nation, under God, shall have a new birth of freedom—and that government of the people, by the people, for the people, shall not perish from the earth.
-"#;
-    assert_eq!(ruby_serializer.serialize(gettysburg_address,
+    assert_eq!(ruby_serializer.serialize(gettysburg_address(),
                                          "", None),
 r#""Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived "\
 "in Liberty, and dedicated to the proposition that all men are created equal.\n\n    Now we are "\
@@ -313,7 +278,7 @@ r#""Four score and seven years ago our fathers brought forth on this continent, 
 "the last full measure of devotion—that we here highly resolve that these dead shall not have died in "\
 "vain—that this nation, under God, shall have a new birth of freedom—and that government of the "\
 "people, by the people, for the people, shall not perish from the earth.\n""#);
-    assert_eq!(ruby_serializer.serialize(gettysburg_address,
+    assert_eq!(ruby_serializer.serialize(gettysburg_address(),
                                          "                  ", None),
                r#""Four score and seven years ago our fathers brought forth on this continent, a new "\
                   "nation, conceived in Liberty, and dedicated to the proposition that all men are "\
