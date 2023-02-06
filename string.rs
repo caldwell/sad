@@ -65,6 +65,7 @@ impl TryFrom<Vec<u8>> for EscapeTable {
 /// Escape character lookup table constants.
 pub struct Esc;
 
+#[allow(unused,non_upper_case_globals,non_snake_case)] // We want these to look like enums
 impl Esc {
     /// "No Escape". The character at this index should be printed literally.
     pub const No  :u8 = 0;
@@ -85,6 +86,7 @@ impl Esc {
 /// ASCII name constants. These are usize for convenience in building escape character
 /// lookup tables.
 pub struct Ascii;
+#[allow(unused)]
 impl Ascii {
     pub const NUL:usize = '\x00' as usize;
     pub const SOH:usize = '\x01' as usize;
@@ -129,6 +131,7 @@ pub enum QuoteRep<'a> {
     HereDoc(&'a str, &'a str),       // Start and end are templates "{NAME}" gets replaced with a heredoc style all-uppercase word
 }
 #[derive(Debug, Clone)]
+#[allow(unused)]
 pub enum Multiline {
     No,
     Yes,
