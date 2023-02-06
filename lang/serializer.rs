@@ -444,12 +444,12 @@ impl<'a> ser::SerializeSeq for &'a mut Serializer {
 
     // Close the sequence.
     fn end(self) -> Result<()> {
-        if let SepStyle::Trailing = self.lang.sep_style {
-            if !self.ends_with(self.lang.array_lit.start()) {
+        if !self.ends_with(self.lang.array_lit.start()) {
+            if let SepStyle::Trailing = self.lang.sep_style {
                 *self += self.lang.array_lit.sep();
             }
+            self.outdent();
         }
-        self.outdent();
         *self += self.lang.array_lit.end();
         Ok(())
     }
@@ -471,12 +471,12 @@ impl<'a> ser::SerializeTuple for &'a mut Serializer {
     }
 
     fn end(self) -> Result<()> {
-        if let SepStyle::Trailing = self.lang.sep_style {
-            if !self.ends_with(self.lang.tuple_lit.start()) {
+        if !self.ends_with(self.lang.tuple_lit.start()) {
+            if let SepStyle::Trailing = self.lang.sep_style {
                 *self += self.lang.tuple_lit.sep();
             }
+            self.outdent();
         }
-        self.outdent();
         *self += self.lang.tuple_lit.end();
         Ok(())
     }
@@ -547,12 +547,12 @@ impl<'a> ser::SerializeMap for &'a mut Serializer {
     }
 
     fn end(self) -> Result<()> {
-        if let SepStyle::Trailing = self.lang.sep_style {
-            if !self.ends_with(self.lang.map_lit.start()) {
+        if !self.ends_with(self.lang.map_lit.start()) {
+            if let SepStyle::Trailing = self.lang.sep_style {
                 *self += self.lang.map_lit.sep();
             }
+            self.outdent();
         }
-        self.outdent();
         *self += self.lang.map_lit.end();
         Ok(())
     }

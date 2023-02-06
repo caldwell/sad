@@ -68,9 +68,7 @@ mod test_sads {
 
     #[test]
     fn test_maps() {
-        assert_eq!(ser(r#"{}"#),
-r#"map[string]interface{}{
-}"#);
+        assert_eq!(ser(r#"{}"#), r#"map[string]interface{}{}"#);
         assert_eq!(ser(r#"{ "key": "value" }"#), r#"map[string]interface{}{ "key":"value", }"#);
         assert_eq!(ser(r#"{ "key": "value", "key2": "value2" }"#), r#"map[string]interface{}{ "key":"value", "key2":"value2", }"#);
     }
@@ -95,8 +93,7 @@ r#"map[string]interface{}{
 
     #[test]
     fn test_arrays() {
-        assert_eq!(ser(r#"[]"#), "[]interface{}{\n\
-                                  }");
+        assert_eq!(ser(r#"[]"#), "[]interface{}{}");
         assert_eq!(ser(r#"[4,5,6,7]"#), r#"[]interface{}{ 4, 5, 6, 7, }"#);
         assert_eq!(ser(r#"[1,2,"non-homogeneous",3,null]"#),
 r#"[]interface{}{
