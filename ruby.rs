@@ -76,23 +76,30 @@ pub struct Serializer {
 }
 
 pub fn to_string<'a, 'b, T: Serialize>(value: &'a T) -> Result<String> {
-    let mut serializer = Serializer {
-        op: VecDeque::new(),
-        output: StringWithLineLen::new(),
-        prefix: String::new(),
-        indent: "  ".to_string(),
-        strser: RubyStringSerializer::new(),
-    };
-    serializer.newchunk();
-    value.serialize(&mut serializer)?;
-    serializer.flush(None);
-    // for op in serializer.op {
-    //     println!("{:?}", op);
-    // }
-    Ok(serializer.output.str)
+    let mut serializer = Serializer::new();
+    serializer.to_string(value)
 }
 
 impl Serializer {
+    pub fn new() -> Serializer {
+        Serializer {
+            op: VecDeque::new(),
+            output: StringWithLineLen::new(),
+            prefix: String::new(),
+            indent: "  ".to_string(),
+            strser: RubyStringSerializer::new(),
+        }
+    }
+    pub fn to_string<'a, T: Serialize>(&mut self, value: &'a T) -> Result<String> {
+        self.newchunk();
+        value.serialize(&mut *self)?;
+        self.flush(None);
+        // for op in serializer.op {
+        //     println!("{:?}", op);
+        // }
+        Ok(std::mem::take(&mut self.output.str))
+    }
+
     fn newline_and_indent(&mut self) {
         self.output += "\n";
         self.output += &self.prefix;
