@@ -130,9 +130,10 @@ impl Serializer {
         self.newchunk();
         value.serialize(&mut *self)?;
         self.flush(None);
-        // for op in serializer.op {
-        //     println!("{:?}", op);
-        // }
+        #[cfg(feature="ser_debug")]
+        for op in self.op.iter() {
+            println!("{:?}", op);
+        }
         Ok(std::mem::take(&mut self.output.str))
     }
 
@@ -156,7 +157,8 @@ impl Serializer {
         let mut depth:i64 = 0;
 
         loop {
-            // println!("Next: depth={} {:?}", depth, self.op.front());
+            #[cfg(feature="ser_debug")]
+            println!("Next: depth={} {:?}", depth, self.op.front());
             match (&state, self.op.front()) {
                 (_, None) => return,
                 (RenderMode::Singleline, Some(Opcode::Sep)) => {
@@ -180,7 +182,8 @@ impl Serializer {
                         depth = 0;
 
                         for op in self.op.iter().skip(1) {
-                            // println!("  Peek: len={}, count={}, depth={}, max_depth={}: {:?}", len, count, depth, max_depth, op);
+                            #[cfg(feature="ser_debug")]
+                            println!("  Peek: len={}, count={}, depth={}, max_depth={}: {:?}", len, count, depth, max_depth, op);
                             match op {
                                 Opcode::In  => { depth += 1; max_depth = std::cmp::max(depth, max_depth); },
                                 Opcode::Out => { if depth == 0 { break } depth -= 1 },
@@ -191,7 +194,8 @@ impl Serializer {
                                 },
                             }
                             if len > HEURISTIC_LINE_LEN_LIMIT || count > HEURISTIC_ITEM_COUNT_LIMIT || depth > HEURISTIC_ITEM_DEPTH_LIMIT as i64 {
-                                // println!("  !readability heuristic: len={}, count={}, depth={}, max_depth={}", len, count, depth, max_depth);
+                                #[cfg(feature="ser_debug")]
+                                println!("  !readability heuristic: len={}, count={}, depth={}, max_depth={}", len, count, depth, max_depth);
                                 state = RenderMode::Multiline;
                                 break;
                             }
@@ -211,7 +215,8 @@ impl Serializer {
                         self.output += " ";
                     }
                     if depth == 0 {
-                        // println!("  *multiline mode: depth={}", depth);
+                        #[cfg(feature="ser_debug")]
+                        println!("  *multiline mode: depth={}", depth);
                         state = RenderMode::Multiline;
                     }
                     depth -= 1;

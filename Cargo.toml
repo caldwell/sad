@@ -3,6 +3,10 @@ name = "sad"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+str_debug = [] # Enable debug prints in the lang/string.rs engine
+ser_debug = [] # Enable debug prints in the lang/serializer.rs engine
+
 [[bin]]
 path = "sad.rs"
 name = "sad"

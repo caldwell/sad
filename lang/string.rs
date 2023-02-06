@@ -253,7 +253,7 @@ impl<'a> StringSerializer<'a> {
 
         if stats.len() == 0 { panic!("Truly unrepresentable string??? This shouldn't happen!") }
 
-        #[cfg(debug)]
+        #[cfg(feature="str_debug")]
         {
             println!("---");
             for (i, s) in stats.iter() {
@@ -262,11 +262,11 @@ impl<'a> StringSerializer<'a> {
         }
 
         for (i, _) in stats.iter() {
-            bests.best_in_class.set(if bests.escapes.who.unwrap() == *i {1} else {0} +
+            bests.best_in_class.set(if bests.escapes.who.unwrap()  == *i {1} else {0} +
                                     if bests.max_line.who.unwrap() == *i {1} else {0} +
-                                    if bests.len.who.unwrap() == *i {1} else {0}, *i);
+                                    if bests.len.who.unwrap()      == *i {1} else {0}, *i);
         }
-        #[cfg(debug)]
+        #[cfg(feature="str_debug")]
         println!("bests={:?}", bests);
 
         let stats = &stats[stats.binary_search_by_key(&bests.best_in_class.who.unwrap(), |&(i, _)| i).expect("This better work")].1;
@@ -341,8 +341,8 @@ impl<'a> StringSerializer<'a> {
 
         rep += end;
 
-        #[cfg(debug)]
-        println!(">>>>\n{}\n>>>>\n", rep);
+        #[cfg(feature="str_debug")]
+        println!(">>>> length {}\n{}\n>>>>\n", rep.len(), rep);
         rep
     }
 }
