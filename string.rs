@@ -1,6 +1,6 @@
 // Copyright © 2023 David Caldwell <david@porkrind.org>
 
-use crate::ruby::HEURISTIC_LINE_LEN_LIMIT;
+use crate::serializer::HEURISTIC_LINE_LEN_LIMIT;
 
 
 /// Escape character lookup table.

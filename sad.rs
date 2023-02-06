@@ -8,7 +8,9 @@ use std::path::{Path, PathBuf};
 
 use docopt::Docopt;
 
+mod php;
 mod ruby;
+mod serializer;
 mod string;
 
 const USAGE: &'static str = "
