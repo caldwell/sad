@@ -127,7 +127,6 @@ impl Ascii {
 pub enum QuoteRep<'a> {
     Same(&'a str),                   // Start and end are the same
     Pair(&'a str, &'a str),          // Start and end are different
-    // Choice(Vec<(&'a str,&'a str)>),  // (start, end) pairs. Will choose the first one where `end` isn't in the string
     HereDoc(&'a str, &'a str),       // Start and end are templates "{NAME}" gets replaced with a heredoc style all-uppercase word
 }
 #[derive(Debug, Clone)]
