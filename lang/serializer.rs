@@ -106,11 +106,22 @@ pub enum MapKey {
     /// else will be quoted.
     NakedIdentifiers,
 }
+
+/// Configuration for how the separators (comma, typically) behave.
+pub enum SepStyle {
+    /// Put the separator (comma, typically) between each element in an array or each
+    /// entry in a map.  Ex: `[1, 2, 3]`
+    Between,
+    /// Put the separator (comma, typically) after each element. Ex: `[1, 2, 3,]`
+    Trailing,
+}
+
 pub struct Language {
     pub array_lit: ArrLit,
     pub tuple_lit: TupLit,
     pub map_lit:   MapLit,
     pub map_key:   MapKey,
+    pub sep_style: SepStyle,
     pub true_lit:  &'static str,
     pub false_lit: &'static str,
     pub null_lit:  &'static str,
@@ -431,6 +442,11 @@ impl<'a> ser::SerializeSeq for &'a mut Serializer {
 
     // Close the sequence.
     fn end(self) -> Result<()> {
+        if let SepStyle::Trailing = self.lang.sep_style {
+            if !self.ends_with(self.lang.array_lit.start()) {
+                *self += self.lang.array_lit.sep();
+            }
+        }
         self.outdent();
         *self += self.lang.array_lit.end();
         Ok(())
@@ -453,6 +469,11 @@ impl<'a> ser::SerializeTuple for &'a mut Serializer {
     }
 
     fn end(self) -> Result<()> {
+        if let SepStyle::Trailing = self.lang.sep_style {
+            if !self.ends_with(self.lang.tuple_lit.start()) {
+                *self += self.lang.tuple_lit.sep();
+            }
+        }
         self.outdent();
         *self += self.lang.tuple_lit.end();
         Ok(())
@@ -524,6 +545,11 @@ impl<'a> ser::SerializeMap for &'a mut Serializer {
     }
 
     fn end(self) -> Result<()> {
+        if let SepStyle::Trailing = self.lang.sep_style {
+            if !self.ends_with(self.lang.map_lit.start()) {
+                *self += self.lang.map_lit.sep();
+            }
+        }
         self.outdent();
         *self += self.lang.map_lit.end();
         Ok(())

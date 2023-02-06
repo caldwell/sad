@@ -2,7 +2,7 @@
 
 use serde::Serialize;
 
-use crate::lang::serializer::{Serializer,Language,ArrLit,MapLit,TupLit,MapKey,Result};
+use crate::lang::serializer::{Serializer,Language,ArrLit,MapLit,TupLit,MapKey,Result,SepStyle};
 
 
 pub fn to_string<'a, 'b, T: Serialize>(value: &'a T) -> Result<String> {
@@ -10,6 +10,7 @@ pub fn to_string<'a, 'b, T: Serialize>(value: &'a T) -> Result<String> {
                                                   map_lit:    MapLit("{", " => ", ",", "}" ),
                                                   tuple_lit:  TupLit("[", ",",  "]" ),
                                                   map_key:    MapKey::AlwaysQuote,
+                                                  sep_style:  SepStyle::Between,
                                                   true_lit:  "true",
                                                   false_lit: "false",
                                                   null_lit:  "nil",
