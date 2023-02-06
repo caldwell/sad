@@ -8,10 +8,7 @@ use std::path::{Path, PathBuf};
 
 use docopt::Docopt;
 
-mod php;
-mod ruby;
-mod serializer;
-mod string;
+mod lang;
 
 const USAGE: &'static str = "
 Usage:
@@ -118,7 +115,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                                          outf.write(&mut toml_str.as_bytes())?; },
         (Some(Format::Toml), true)  => { let toml_str = toml::to_string(&data)?;
                                          outf.write(&mut toml_str.as_bytes())?; },
-        (Some(Format::Ruby), _)     => { let ruby_str = ruby::to_string(&data)?;
+        (Some(Format::Ruby), _)     => { let ruby_str = lang::ruby::to_string(&data)?;
                                          outf.write(&mut ruby_str.as_bytes())?; },
         (None,_) => unreachable!(),
     }

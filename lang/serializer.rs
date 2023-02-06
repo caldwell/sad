@@ -4,7 +4,7 @@ use std::fmt::{self, Display};
 use serde::{ser, Serialize};
 use std::collections::VecDeque;
 
-use crate::string::StringSerializer;
+use crate::lang::string::StringSerializer;
 
 pub type Result<T> = std::result::Result<T, Error>;
 

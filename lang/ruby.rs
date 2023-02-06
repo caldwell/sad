@@ -2,7 +2,7 @@
 
 use serde::Serialize;
 
-use crate::serializer::{Serializer,Language,ArrLit,MapLit,TupLit,MapKey,Result};
+use crate::lang::serializer::{Serializer,Language,ArrLit,MapLit,TupLit,MapKey,Result};
 
 
 pub fn to_string<'a, 'b, T: Serialize>(value: &'a T) -> Result<String> {
@@ -17,7 +17,7 @@ pub fn to_string<'a, 'b, T: Serialize>(value: &'a T) -> Result<String> {
     serializer.to_string(value)
 }
 
-use crate::string::*;
+use crate::lang::string::*;
 
 struct RubyStringSerializer;
 
