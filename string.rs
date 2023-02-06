@@ -184,7 +184,7 @@ impl<'a> StringSerializer<'a> {
 
     pub fn new() -> StringSerializer<'a> { StringSerializer{ styles: Vec::new() } }
     pub fn add_quote_style(mut self, style: &QuoteStyle<'a>) -> Self {
-            self.styles.push(style.clone());
+        self.styles.push(style.clone());
         self
     }
 
