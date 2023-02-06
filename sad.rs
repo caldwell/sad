@@ -1,10 +1,11 @@
 // Copyright © 2023 David Caldwell <david@porkrind.org>
 
-use std::error::Error;
-use std::path::{Path,PathBuf};
 use std::boxed::Box;
+use std::error::Error;
 use std::fs::File;
-use std::io::{stdin,stdout};
+use std::io::{stdin, stdout};
+use std::path::{Path, PathBuf};
+
 use docopt::Docopt;
 
 mod ruby;
