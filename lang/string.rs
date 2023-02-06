@@ -203,9 +203,9 @@ impl<'a> StringSerializer<'a> {
         }
         #[derive(Default, Debug)]
         struct Bests {
-            escapes:       Lowest<usize,usize>,
-            len:           Lowest<usize,usize>,
-            max_line:      Lowest<usize,usize>,
+            escapes:       Lowest<usize, usize>,
+            len:           Lowest<usize, usize>,
+            max_line:      Lowest<usize, usize>,
             best_in_class: Highest<usize, usize>,
         }
         let mut bests = Bests::default();
