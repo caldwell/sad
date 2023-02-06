@@ -254,16 +254,18 @@ impl Serializer {
         self.op.push_back(Opcode::Sep);
     }
     fn out(&mut self, s: &str) {
-        let collapse =
-            if let Some(Opcode::Chunk(chunk)) = self.op.back() { if chunk == "" {
-                if let Some(Opcode::Chunk(chunk)) = self.op.get(self.op.len().saturating_sub(2)) {
-                    match (chunk.chars().next_back(), s.chars().next()) {
-                        (Some(','), Some('{')) |
-                        (Some(','), Some('[')) => true,
-                        (_,_)                  => false,
-                    }
-                } else { false }
-            } else {false}} else {false};
+        let collapse = {
+            let mut i = self.op.iter();
+            match (i.next_back(), i.next_back()) {
+                ( Some(Opcode::Chunk(last)), Some(Opcode::Chunk(prev)) ) if last == ""
+                    => match (prev.chars().next_back(), s.chars().next()) {
+                           (Some(','), Some('{')) |
+                           (Some(','), Some('[')) => true,
+                           (_,_)                  => false,
+                       },
+                (_,_) => false,
+            }
+        };
         if collapse {
             self.op.pop_back();
         }
