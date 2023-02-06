@@ -68,15 +68,15 @@ pub struct Esc;
 #[allow(unused,non_upper_case_globals,non_snake_case)] // We want these to look like enums
 impl Esc {
     /// "No Escape". The character at this index should be printed literally.
-    pub const No  :u8 = 0;
+    pub const No:  u8 = 0;
     /// The character at this index should be escaped as hex digits (ie `\x0a`)
-    pub const Hex :u8 = 1;
+    pub const Hex: u8 = 1;
     /// The character at this index should be escaped as octal digits (ie `\001`)
-    pub const Oct :u8 = 2;
+    pub const Oct: u8 = 2;
     /// The character at this index is not representable. This is useful for control characters in a single
     /// quoted string, since they cannot be escaped and we don't want control characters going though
     /// verbatim. Hitting this will take a [`QuoteStyle`] out of the running.
-    pub const Ill :u8 = 3;
+    pub const Ill: u8 = 3;
     /// The character at this index should be escaped as a `\` followed by the ASCII
     /// character passed in. Unicode replacement characters are not supported.
     pub const fn Rep(c: char) -> u8 { if !c.is_ascii() { panic!("escape replacements must be ascii") }
@@ -88,46 +88,46 @@ impl Esc {
 pub struct Ascii;
 #[allow(unused)]
 impl Ascii {
-    pub const NUL:usize = '\x00' as usize;
-    pub const SOH:usize = '\x01' as usize;
-    pub const STX:usize = '\x02' as usize;
-    pub const ETX:usize = '\x03' as usize;
-    pub const EOT:usize = '\x04' as usize;
-    pub const ENQ:usize = '\x05' as usize;
-    pub const ACK:usize = '\x06' as usize;
-    pub const BEL:usize = '\x07' as usize;
-    pub const BS :usize = '\x08' as usize;
-    pub const TAB:usize = '\x09' as usize;
-    pub const LF :usize = '\x0A' as usize;
-    pub const VT :usize = '\x0B' as usize;
-    pub const FF :usize = '\x0C' as usize;
-    pub const CR :usize = '\x0D' as usize;
-    pub const SO :usize = '\x0E' as usize;
-    pub const SI :usize = '\x0F' as usize;
-    pub const DLE:usize = '\x10' as usize;
-    pub const DC1:usize = '\x11' as usize;
-    pub const DC2:usize = '\x12' as usize;
-    pub const DC3:usize = '\x13' as usize;
-    pub const DC4:usize = '\x14' as usize;
-    pub const NAK:usize = '\x15' as usize;
-    pub const SYN:usize = '\x16' as usize;
-    pub const ETB:usize = '\x17' as usize;
-    pub const CAN:usize = '\x18' as usize;
-    pub const EM :usize = '\x19' as usize;
-    pub const SUB:usize = '\x1A' as usize;
-    pub const ESC:usize = '\x1B' as usize;
-    pub const FS :usize = '\x1C' as usize;
-    pub const GS :usize = '\x1D' as usize;
-    pub const RS :usize = '\x1E' as usize;
-    pub const US :usize = '\x1F' as usize;
-    pub const SPC:usize = '\x20' as usize;
+    pub const NUL: usize = '\x00' as usize;
+    pub const SOH: usize = '\x01' as usize;
+    pub const STX: usize = '\x02' as usize;
+    pub const ETX: usize = '\x03' as usize;
+    pub const EOT: usize = '\x04' as usize;
+    pub const ENQ: usize = '\x05' as usize;
+    pub const ACK: usize = '\x06' as usize;
+    pub const BEL: usize = '\x07' as usize;
+    pub const BS:  usize = '\x08' as usize;
+    pub const TAB: usize = '\x09' as usize;
+    pub const LF:  usize = '\x0A' as usize;
+    pub const VT:  usize = '\x0B' as usize;
+    pub const FF:  usize = '\x0C' as usize;
+    pub const CR:  usize = '\x0D' as usize;
+    pub const SO:  usize = '\x0E' as usize;
+    pub const SI:  usize = '\x0F' as usize;
+    pub const DLE: usize = '\x10' as usize;
+    pub const DC1: usize = '\x11' as usize;
+    pub const DC2: usize = '\x12' as usize;
+    pub const DC3: usize = '\x13' as usize;
+    pub const DC4: usize = '\x14' as usize;
+    pub const NAK: usize = '\x15' as usize;
+    pub const SYN: usize = '\x16' as usize;
+    pub const ETB: usize = '\x17' as usize;
+    pub const CAN: usize = '\x18' as usize;
+    pub const EM:  usize = '\x19' as usize;
+    pub const SUB: usize = '\x1A' as usize;
+    pub const ESC: usize = '\x1B' as usize;
+    pub const FS:  usize = '\x1C' as usize;
+    pub const GS:  usize = '\x1D' as usize;
+    pub const RS:  usize = '\x1E' as usize;
+    pub const US:  usize = '\x1F' as usize;
+    pub const SPC: usize = '\x20' as usize;
 }
 
 #[derive(Debug, Clone)]
 pub enum QuoteRep<'a> {
-    Same(&'a str),                   // Start and end are the same
-    Pair(&'a str, &'a str),          // Start and end are different
-    HereDoc(&'a str, &'a str),       // Start and end are templates "{NAME}" gets replaced with a heredoc style all-uppercase word
+    Same(&'a str),             // Start and end are the same
+    Pair(&'a str, &'a str),    // Start and end are different
+    HereDoc(&'a str, &'a str), // Start and end are templates "{NAME}" gets replaced with a heredoc style all-uppercase word
 }
 #[derive(Debug, Clone)]
 #[allow(unused)]
@@ -138,9 +138,9 @@ pub enum Multiline {
 }
 #[derive(Debug, Clone)]
 pub struct QuoteStyle<'a> {
-    pub rep: QuoteRep<'a>,
-    pub escapes: EscapeTable,
-    pub catenate: Option<&'a str>,
+    pub rep:       QuoteRep<'a>,
+    pub escapes:   EscapeTable,
+    pub catenate:  Option<&'a str>,
     pub multiline: Multiline,
 }
 
@@ -197,15 +197,15 @@ impl<'a> StringSerializer<'a> {
     pub fn serialize(&self, s: &str, prefix: &str, name: Option<&str>) -> String {
         #[derive(Default, Debug)]
         struct Stats {
-            escapes: usize,
-            len: usize,
+            escapes:  usize,
+            len:      usize,
             max_line: usize,
         }
         #[derive(Default, Debug)]
         struct Bests {
-            escapes: Lowest<usize,usize>,
-            len: Lowest<usize,usize>,
-            max_line: Lowest<usize,usize>,
+            escapes:       Lowest<usize,usize>,
+            len:           Lowest<usize,usize>,
+            max_line:      Lowest<usize,usize>,
             best_in_class: Highest<usize, usize>,
         }
         let mut bests = Bests::default();
@@ -213,8 +213,8 @@ impl<'a> StringSerializer<'a> {
         let stats: Vec<_> = self.styles.iter().enumerate().filter_map(|(i,quote)| {
             let mut stats = Stats::default();
             let (startlen, endlen) = match (&quote.rep, &quote.multiline) {
-                (QuoteRep::Same(s), _)  => (s.len(), s.len()),
-                (QuoteRep::Pair(s,e), _) => (s.len(), e.len()),
+                (QuoteRep::Same(s),       _)                  => (s.len(), s.len()),
+                (QuoteRep::Pair(s,e),     _)                  => (s.len(), e.len()),
                 (QuoteRep::HereDoc(_, _), Multiline::No)      => panic!("Makes no sense."),
                 (QuoteRep::HereDoc(s, e), Multiline::Yes)     => (s.replace("{NAME}", &heredoc_name).len(), e.replace("{NAME}", &heredoc_name).len()),
                 (QuoteRep::HereDoc(s, e), Multiline::Indent)  => (s.replace("{NAME}", &heredoc_name).len(), e.replace("{NAME}", &heredoc_name).len() + prefix.len()),
@@ -237,10 +237,9 @@ impl<'a> StringSerializer<'a> {
                     (Esc::No, Multiline::Indent) if c == '\t'            => { stats.len += 1; pos += 1; }
                     (Esc::No, _)                 if c.is_ascii_control() => { return None; } // Don't ever serialize unescaped control characters
                     (Esc::No, _)                                         => { stats.len += 1; pos += 1; },
-                    (Esc::Ill , _)                                         => { return None; }
-                    (Esc::Hex , _) |
-                    (Esc::Oct , _)                                         => { stats.len += 4; pos += 4; stats.escapes += 1; }
-                    (_        , _)                                         => { stats.len += 2; pos += 2; stats.escapes += 1; }
+                    (Esc::Ill , _)                                       => { return None; }
+                    (Esc::Hex , _) | (Esc::Oct , _)                      => { stats.len += 4; pos += 4; stats.escapes += 1; }
+                    (_        , _)                                       => { stats.len += 2; pos += 2; stats.escapes += 1; }
                 }
             }
             pos += endlen;
@@ -274,7 +273,7 @@ impl<'a> StringSerializer<'a> {
         let quote = &self.styles[bests.best_in_class.who.unwrap()];
 
         let mut heredoc_str_start: String;
-        let mut heredoc_str_end: String;
+        let mut heredoc_str_end:   String;
 
         let (start, end) = match (&quote.rep, &quote.multiline) {
             (QuoteRep::Same(s), _)  => (*s,*s),
