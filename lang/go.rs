@@ -109,13 +109,19 @@ r#"[]interface{}{
     fn test_arrays_of_arrays() {
         assert_eq!(ser(r#"[ [1,2], [3,4] ]"#),
 r#"[]interface{}{
-  []interface{}{ 1, 2, },
-  []interface{}{ 3, 4, },
+  []interface{}{ 1, 2, }, []interface{}{ 3, 4, },
+}"#);
+        assert_eq!(ser(r#"[[ [1,2], [3,4] ], [ [5,6], [7,8] ]]"#),
+r#"[]interface{}{
+  []interface{}{
+    []interface{}{ 1, 2, }, []interface{}{ 3, 4, },
+  }, []interface{}{
+    []interface{}{ 5, 6, }, []interface{}{ 7, 8, },
+  },
 }"#);
         assert_eq!(ser(r#"[ ["a","b"], [1,2] ]"#),
 r#"[]interface{}{
-  []interface{}{ "a", "b", },
-  []interface{}{ 1, 2, },
+  []interface{}{ "a", "b", }, []interface{}{ 1, 2, },
 }"#);
         assert_eq!(ser(r#"[[[[[[[[[[[1,2],[3,[4,[5,[6,null]]]],"yep",7]]]]],"more"]]]]]"#),
 r#"[]interface{}{
@@ -128,15 +134,9 @@ r#"[]interface{}{
               []interface{}{
                 []interface{}{
                   []interface{}{
-                    []interface{}{ 1, 2, },
-                    []interface{}{
-                      3,
-                      []interface{}{
-                        4,
-                        []interface{}{
-                          5,
-                          []interface{}{ 6, nil, },
-                        },
+                    []interface{}{ 1, 2, }, []interface{}{
+                      3, []interface{}{
+                        4, []interface{}{ 5, []interface{}{ 6, nil, }, },
                       },
                     },
                     "yep",

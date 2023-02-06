@@ -256,17 +256,18 @@ impl Serializer {
     fn out(&mut self, s: &str) {
         let collapse = {
             let mut i = self.op.iter();
-            match (i.next_back(), i.next_back()) {
-                ( Some(Opcode::Chunk(last)), Some(Opcode::Chunk(prev)) ) if last == ""
+            match (i.next_back(), i.next_back(), i.next_back()) {
+                ( Some(Opcode::Chunk(last)), Some(Opcode::Sep), Some(Opcode::Chunk(prev)) ) if last == ""
                     => match (prev.chars().next_back(), s.chars().next()) {
                            (Some(','), Some('{')) |
                            (Some(','), Some('[')) => true,
                            (_,_)                  => false,
                        },
-                (_,_) => false,
+                (_,_,_) => false,
             }
         };
         if collapse {
+            self.op.pop_back();
             self.op.pop_back();
         }
 
