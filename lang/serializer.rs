@@ -102,7 +102,8 @@ impl MapLit {
 pub enum MapKey {
     /// Keys are required to be quoted (such as JSON)
     AlwaysQuote,
-    /// Valid identifiers don't need quoting (such as ecmascript). Everything else will be quoted.
+    /// Valid identifiers don't need quoting (such as ecmascript). Everything
+    /// else will be quoted.
     NakedIdentifiers,
 }
 pub struct Language {
