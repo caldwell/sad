@@ -46,6 +46,7 @@ enum Format {
     Toml,
     Json,
     Ruby,
+    Go,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -117,6 +118,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                                          outf.write(&mut toml_str.as_bytes())?; },
         (Some(Format::Ruby), _)     => { let ruby_str = lang::ruby::to_string(&data)?;
                                          outf.write(&mut ruby_str.as_bytes())?; },
+        (Some(Format::Go),   _)     => { let go_str = lang::go::to_string(&data)?;
+                                         outf.write(&mut go_str.as_bytes())?; },
         (None,_) => unreachable!(),
     }
 

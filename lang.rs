@@ -3,4 +3,5 @@
 pub mod serializer;
 pub mod string;
 pub mod ruby;
+pub mod go;
 
