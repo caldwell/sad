@@ -529,75 +529,76 @@ impl<'a> ser::SerializeStructVariant for &'a mut Serializer {
     }
 }
 
-use array_lit::arr;
 use crate::string::*;
-const RUBY_DQ: [u8; 128] = arr![Esc::No; 128; {
-    [0]: [ Esc::Hex as u8; 32 ],
-    (Ascii::BEL  as usize): Esc::Rep('a'),
-    (Ascii::BS   as usize): Esc::Rep('b'),
-    (Ascii::TAB  as usize): Esc::Rep('t'),
-    (Ascii::LF   as usize): Esc::Rep('n'),
-    (Ascii::VT   as usize): Esc::Rep('v'),
-    (Ascii::FF   as usize): Esc::Rep('f'),
-    (Ascii::CR   as usize): Esc::Rep('r'),
-    (Ascii::ESC  as usize): Esc::Rep('e'),
-    //(Ascii::SPC  as usize): Esc::Rep('s'),
-    ('"'         as usize): Esc::Rep('"'),
-    ('\\'        as usize): Esc::Rep('\\'),
-    ('#'         as usize): Esc::Rep('#'), // don't accidentally interpolate
-}];
-
-fn ruby_percent_dq_escapes(end: char) -> Vec<u8> {
-    let mut esc = RUBY_DQ.to_vec();
-    esc[end as usize] = end as u8;
-    esc['"' as usize] = Esc::No;
-    esc
-}
-
-const RUBY_DQ_HERE: [u8; 128] = arr![Esc::No; 128; {
-    [0]: [ Esc::Hex as u8; 32 ],
-    (Ascii::BEL  as usize): Esc::Rep('a'),
-    (Ascii::BS   as usize): Esc::Rep('b'),
-    (Ascii::TAB  as usize): Esc::No,
-    (Ascii::LF   as usize): Esc::No,
-    (Ascii::VT   as usize): Esc::Rep('v'),
-    (Ascii::FF   as usize): Esc::Rep('f'),
-    (Ascii::CR   as usize): Esc::Rep('r'),
-    (Ascii::ESC  as usize): Esc::Rep('e'),
-    ('\\'        as usize): Esc::Rep('\\'),
-    ('#'         as usize): Esc::Rep('#'), // don't accidentally interpolate
-}];
-
-const RUBY_SQ: [u8; 128] = arr![Esc::No; 128; {
-    [0]: [Esc::Ill as u8; 32],
-    ('\'' as usize): Esc::Rep('\''),
-    ('\\' as usize): Esc::Rep('\\'),
-}];
-
-fn ruby_percent_sq_escapes(end: char) -> Vec<u8> {
-    let mut esc = RUBY_SQ.to_vec();
-    esc[end as usize] = end as u8;
-    esc['\'' as usize] = Esc::No;
-    esc
-}
-
-const RUBY_SQ_HERE: [u8; 128] = arr![Esc::No; 128; {
-    [0]: [Esc::Ill as u8; 32],
-    (Ascii::TAB  as usize): Esc::No,
-    (Ascii::LF   as usize): Esc::No,
-}];
 
 struct RubyStringSerializer;
 
 impl RubyStringSerializer {
     fn new() -> StringSerializer<'static> {
+        use array_lit::vec;
+        let dq_esc = vec![Esc::No; 128; {
+            [0]: [ Esc::Hex as u8; 32 ],
+            (Ascii::BEL  as usize): Esc::Rep('a'),
+            (Ascii::BS   as usize): Esc::Rep('b'),
+            (Ascii::TAB  as usize): Esc::Rep('t'),
+            (Ascii::LF   as usize): Esc::Rep('n'),
+            (Ascii::VT   as usize): Esc::Rep('v'),
+            (Ascii::FF   as usize): Esc::Rep('f'),
+            (Ascii::CR   as usize): Esc::Rep('r'),
+            (Ascii::ESC  as usize): Esc::Rep('e'),
+            //(Ascii::SPC  as usize): Esc::Rep('s'),
+            ('"'         as usize): Esc::Rep('"'),
+            ('\\'        as usize): Esc::Rep('\\'),
+            ('#'         as usize): Esc::Rep('#'), // don't accidentally interpolate
+        }];
+
+        let ruby_percent_dq_escapes = |end| {
+            let mut esc = dq_esc.clone();
+            esc[end as usize] = end as u8;
+            esc['"' as usize] = Esc::No;
+            EscapeTable::try_from(&esc[..]).expect("percent_dq_escapes")
+        };
+
+        let dq_here_esc = vec![Esc::No; 128; {
+            [0]: [ Esc::Hex as u8; 32 ],
+            (Ascii::BEL  as usize): Esc::Rep('a'),
+            (Ascii::BS   as usize): Esc::Rep('b'),
+            (Ascii::TAB  as usize): Esc::No,
+            (Ascii::LF   as usize): Esc::No,
+            (Ascii::VT   as usize): Esc::Rep('v'),
+            (Ascii::FF   as usize): Esc::Rep('f'),
+            (Ascii::CR   as usize): Esc::Rep('r'),
+            (Ascii::ESC  as usize): Esc::Rep('e'),
+            ('\\'        as usize): Esc::Rep('\\'),
+            ('#'         as usize): Esc::Rep('#'), // don't accidentally interpolate
+        }];
+
+        let sq_esc = vec![Esc::No; 128; {
+            [0]: [Esc::Ill as u8; 32],
+            ('\'' as usize): Esc::Rep('\''),
+            ('\\' as usize): Esc::Rep('\\'),
+        }];
+
+        let ruby_percent_sq_escapes = |end| {
+            let mut esc = sq_esc.clone();
+            esc[end as usize] = end as u8;
+            esc['\'' as usize] = Esc::No;
+            EscapeTable::try_from(&esc[..]).expect("percent_sq_escapes")
+        };
+
+        let sq_here_esc = vec![Esc::No; 128; {
+            [0]: [Esc::Ill as u8; 32],
+            (Ascii::TAB  as usize): Esc::No,
+            (Ascii::LF   as usize): Esc::No,
+        }];
+
         StringSerializer::new()
             .add_quote_style(&QuoteStyle{ rep: QuoteRep::Same("'"),
-                                          escapes: RUBY_SQ.to_vec(),
+                                          escapes: EscapeTable::try_from(&sq_esc).expect("sq_esc"),
                                           catenate: Some("\\"),
                                           multiline: Multiline::No, })
             .add_quote_style(&QuoteStyle{ rep: QuoteRep::Same("\""),
-                                          escapes: RUBY_DQ.to_vec(),
+                                          escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
                                           catenate: Some("\\"),
                                           multiline: Multiline::No, })
             .add_quote_styles(&[("%Q{","}"),
@@ -643,11 +644,11 @@ impl RubyStringSerializer {
                                                multiline: Multiline::No, }
                                }).collect())
             .add_quote_style(&QuoteStyle{ rep: QuoteRep::HereDoc("<<~{NAME}", "{NAME}"),
-                                          escapes: RUBY_DQ_HERE.to_vec(),
+                                          escapes: EscapeTable::try_from(dq_here_esc).expect("dq_here_esc"),
                                           catenate: None,
                                           multiline: Multiline::Indent, })
             .add_quote_style(&QuoteStyle{ rep: QuoteRep::HereDoc("<<~'{NAME}'", "{NAME}"),
-                                          escapes: RUBY_SQ_HERE.to_vec(),
+                                          escapes: EscapeTable::try_from(sq_here_esc).expect("sq_here_esc"),
                                           catenate: None,
                                           multiline: Multiline::Indent, })
     }

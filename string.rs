@@ -10,12 +10,13 @@ use crate::ruby::HEURISTIC_LINE_LEN_LIMIT;
 /// string. The ['Esc'] type defines constants to use here.
 ///
 /// # Example
-///     use array_lit::arr; // The array_lit crate allows for compact const arrays
-///     const RUBY_SINGLE_QUOTE: [u8; 128] = arr![Esc::No; 128; {
-///         [0]: [Esc::Ill; 32],
+///     use array_lit::vec; // The array_lit crate allows for compact declarations here
+///     let sq_esc = vec![Esc::No; 128; {
+///         [0]: [Esc::Ill as u8; 32],
 ///         ('\'' as usize): Esc::Rep('\''),
 ///         ('\\' as usize): Esc::Rep('\\'),
 ///     }];
+///     let table = EscapeTable::try_from(sq_esc).expect("sq_esc");
 ///
 /// This uses the array_lit crate's `arr!` macro to built a lookup table suitable for
 /// single quoted Ruby strings:
@@ -29,8 +30,37 @@ use crate::ruby::HEURISTIC_LINE_LEN_LIMIT;
 ///
 /// 3. It then overrides the entries for `'` and `\` to be represented by themselves (ie
 ///    `\'` and `\\`). Note the backslash in the output is implied.
-type EscapeTable = [u8; 128];
+#[derive(Debug, Clone)]
+pub struct EscapeTable {
+    table: Vec<u8>,
+}
 
+impl std::ops::Index<usize> for EscapeTable {
+    type Output = u8;
+    fn index(&self, index: usize) -> &u8 { &self.table[index] }
+}
+
+impl TryFrom<&[u8]> for EscapeTable {
+    type Error = String;
+    fn try_from(slice: &[u8]) -> Result<Self, Self::Error> {
+        EscapeTable::try_from(slice.to_vec())
+    }
+}
+
+impl TryFrom<&Vec<u8>> for EscapeTable {
+    type Error = String;
+    fn try_from(vec: &Vec<u8>) -> Result<Self, Self::Error> {
+        EscapeTable::try_from(&vec[..])
+    }
+}
+
+impl TryFrom<Vec<u8>> for EscapeTable {
+    type Error = String;
+    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
+        if vec.len() != 128 { return Err(format!("EscapeTable length was {} and not 128", vec.len())); }
+        Ok(EscapeTable { table: vec })
+    }
+}
 
 /// Escape character lookup table constants.
 pub struct Esc;
@@ -107,7 +137,7 @@ pub enum Multiline {
 #[derive(Debug, Clone)]
 pub struct QuoteStyle<'a> {
     pub rep: QuoteRep<'a>,
-    pub escapes: Vec<u8>,
+    pub escapes: EscapeTable,
     pub catenate: Option<&'a str>,
     pub multiline: Multiline,
 }
