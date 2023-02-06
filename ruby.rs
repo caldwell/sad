@@ -46,8 +46,8 @@ enum RenderMode {
 }
 
 struct StringWithLineLen {
-    pub str: String,
-    pub linelen: usize,
+    str: String,
+    linelen: usize,
 }
 
 impl StringWithLineLen {
