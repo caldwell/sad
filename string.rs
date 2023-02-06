@@ -62,7 +62,7 @@ impl TryFrom<Vec<u8>> for EscapeTable {
     }
 }
 
-/// Escape character lookup table constants.
+/// Escape character lookup table constants. See [`EscapeTable`].
 pub struct Esc;
 
 #[allow(unused,non_upper_case_globals,non_snake_case)] // We want these to look like enums
@@ -84,7 +84,7 @@ impl Esc {
 }
 
 /// ASCII name constants. These are usize for convenience in building escape character
-/// lookup tables.
+/// lookup tables ([`EscapeTable`]).
 pub struct Ascii;
 #[allow(unused)]
 impl Ascii {
