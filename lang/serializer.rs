@@ -609,3 +609,59 @@ impl<'a> ser::SerializeStructVariant for &'a mut Serializer {
 
 
 
+#[cfg(test)]
+pub mod test {
+    #[macro_export]
+    macro_rules! ser_test {
+        ( $name:ident, $expect:expr ) => {
+            #[test]
+            fn $name() {
+                let json = $crate::lang::serializer::test::$name;
+                let data: serde_yaml::Value = serde_json::from_str(json).expect(&format!("bad json in test {}", stringify!($name)));
+                let out = to_string(&data).expect("serialization failed");
+                let expect = $expect;
+                if (out != expect) {
+                    let (ofile, oline, ocol) = $crate::lang::serializer::test::$name::position();
+                    panic!("Serializer output did not match expected values\n\
+                            Output:\n\
+                            {out}\n\
+                            {tfile}:{tline}:{tcol}:  Expected:\n\
+                            {expect}\n\
+                            {ofile}:{oline}:{ocol}:  Original JSON:\n\
+                            {json}\n",
+                           tfile=file!(), tline=line!(), tcol=column!());
+                }
+            }
+        }
+    }
+
+    macro_rules! define_test_data {
+        ( $name:ident, $str:expr ) => {
+            #[allow(non_upper_case_globals)]
+            pub const $name : &str = $str;
+            pub mod $name {
+                pub const fn position() -> (&'static str,u32,u32) { (file!(), line!(), column!()) }
+            }
+        }
+    }
+
+    define_test_data!(test_empty_map, r#"{}"#);
+    define_test_data!(test_simple_map1, r#"{ "key": "value" }"#);
+    define_test_data!(test_simple_map2, r#"{ "key": "value", "key2": "value2" }"#);
+    define_test_data!(test_nested_maps, r#"{ "key": { "nested": { "wow": { "how": { "far": { "can": { "we": { "go": "!" } } } } } } } }"#);
+
+    define_test_data!(test_empty_array, r#"[]"#);
+    define_test_data!(test_simple_array1, r#"[4,5,6,7]"#);
+    define_test_data!(test_non_homogeneous_array, r#"[1,2,"non-homogeneous",3,null]"#);
+
+    define_test_data!(test_arrays_of_arrays1, r#"[ [1,2], [3,4] ]"#);
+    define_test_data!(test_arrays_of_arrays2, r#"[[ [1,2], [3,4] ], [ [5,6], [7,8] ]]"#);
+    define_test_data!(test_arrays_of_arrays3, r#"[ ["a","b"], [1,2] ]"#);
+    define_test_data!(test_arrays_of_arrays4, r#"[[[[[[[[[[[1,2],[3,[4,[5,[6,null]]]],"yep",7]]]]],"more"]]]]]"#);
+
+    define_test_data!(test_mixed1, r#"{"array":[1,2,3,4]}"#);
+    define_test_data!(test_mixed2, r#"[{"a":[2,3]},{"b":[3,4]}]"#);
+    define_test_data!(test_true, r#"true"#);
+    define_test_data!(test_false, r#"false"#);
+    define_test_data!(test_large, r#"{"name":"babel","version":"7.20.15","private":true,"type":"commonjs","scripts":{"postinstall":"husky install","bootstrap":"make bootstrap","codesandbox:build":"make build-no-bundle","build":"make build","fix":"make fix","lint":"make lint","test":"make test","version":"yarn --immutable-cache && git add yarn.lock","test:esm":"node test/esm/index.js","test:runtime:generate-absolute-runtime":"node test/runtime-integration/generate-absolute-runtime.cjs","test:runtime:bundlers":"node test/runtime-integration/bundlers.cjs","test:runtime:node":"node test/runtime-integration/node.cjs"},"packageManager":"yarn@3.2.4","devDependencies":{"@babel/cli":"^7.20.7","@babel/core":"^7.20.7","@babel/eslint-config-internal":"workspace:^","@babel/eslint-parser":"workspace:^","@babel/eslint-plugin-development":"workspace:^","@babel/eslint-plugin-development-internal":"workspace:^","@babel/plugin-proposal-dynamic-import":"^7.18.6","@babel/plugin-proposal-export-namespace-from":"^7.18.9","@babel/plugin-proposal-object-rest-spread":"^7.20.7","@babel/plugin-transform-modules-commonjs":"^7.20.11","@babel/plugin-transform-runtime":"^7.19.6","@babel/preset-env":"^7.20.2","@babel/preset-typescript":"^7.18.6","@babel/runtime":"^7.20.7","@rollup/plugin-babel":"^5.3.1","@rollup/plugin-commonjs":"^22.0.2","@rollup/plugin-json":"^4.1.0","@rollup/plugin-node-resolve":"^13.3.0","@rollup/plugin-replace":"^4.0.0","@types/node":"^18.11.7","@typescript-eslint/eslint-plugin":"^5.46.0","@typescript-eslint/parser":"^5.46.0","babel-plugin-transform-charcodes":"^0.2.0","c8":"^7.12.0","chalk":"^5.0.0","charcodes":"^0.2.0","core-js":"^3.26.0","eslint":"^8.22.0","eslint-formatter-codeframe":"^7.32.1","eslint-import-resolver-node":"^0.3.6","eslint-plugin-import":"^2.26.0","eslint-plugin-jest":"^27.1.5","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^4.2.1","glob":"^8.0.3","gulp":"^4.0.2","gulp-filter":"^7.0.0","gulp-plumber":"^1.2.1","husky":"^7.0.4","import-meta-resolve":"^1.1.1","jest":"^29.0.1","jest-light-runner":"^0.4.0","jest-worker":"^29.0.1","lint-staged":"^13.0.3","mergeiterator":"^1.4.4","prettier":"^2.7.1","rollup":"^2.78.0","rollup-plugin-dts":"^5.0.0","rollup-plugin-polyfill-node":"^0.10.2","rollup-plugin-terser":"^7.0.2","semver":"^6.3.0","shelljs":"^0.8.5","test262-stream":"^1.4.0","through2":"^4.0.0","typescript":"~4.9.3"},"workspaces":["codemods/*","eslint/*","packages/*","test/esm","test/runtime-integration/*","benchmark"],"resolutions":{"browserslist":"npm:4.21.3","caniuse-lite":"npm:1.0.30001397","core-js-compat":"npm:3.25.1","electron-to-chromium":"npm:1.4.248","glob-watcher/chokidar":"npm:^3.4.0","@types/babel__core":"link:./nope","@types/babel__traverse":"link:./nope","@babel/parser/@babel/types":"workspace:*","babel-plugin-polyfill-corejs2/@babel/compat-data":"workspace:*"},"engines":{"yarn":">=1.4.0"},"lint-staged":{"*.{js,cjs,mjs,ts}":["eslint --format=codeframe --cache --cache-strategy=content"]},"dependenciesMeta":{"core-js":{"built":false},"core-js-pure":{"built":false}},"changelog":{"repo":"babel/babel","cacheDir":".changelog","labels":{"PR: Spec Compliance :eyeglasses:":":eyeglasses: Spec Compliance","PR: Breaking Change :boom:":":boom: Breaking Change","PR: Deprecation: :loudspeaker:":":loudspeaker: Deprecation","PR: New Feature :rocket:":":rocket: New Feature","PR: Bug Fix :bug:":":bug: Bug Fix","PR: Polish :nail_care:":":nail_care: Polish","PR: Docs :memo:":":memo: Documentation","PR: Internal :house:":":house: Internal","PR: Performance :running_woman:":":running_woman: Performance","PR: Revert :leftwards_arrow_with_hook:":":leftwards_arrow_with_hook: Revert","PR: Output optimization :microscope:":":microscope: Output optimization"}}}"#);
+}

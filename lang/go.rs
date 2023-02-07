@@ -58,24 +58,13 @@ impl GoStringSerializer {
 #[cfg(test)]
 mod test_sads {
     use super::*;
+    use crate::ser_test;
 
-    fn ser(json: &str) -> String {
-        let data: serde_yaml::Value = serde_json::from_str(json).expect("bad json in test");
-        let out = to_string(&data).expect("serialization failed");
-        println!("out:\n{}\n---\n", out);
-        out
-    }
+    ser_test!(test_empty_map, r#"map[string]interface{}{}"#);
 
-    #[test]
-    fn test_maps() {
-        assert_eq!(ser(r#"{}"#), r#"map[string]interface{}{}"#);
-        assert_eq!(ser(r#"{ "key": "value" }"#), r#"map[string]interface{}{ "key":"value", }"#);
-        assert_eq!(ser(r#"{ "key": "value", "key2": "value2" }"#), r#"map[string]interface{}{ "key":"value", "key2":"value2", }"#);
-    }
-
-    #[test]
-    fn test_nested_maps() {
-        assert_eq!(ser(r#"{ "key": { "nested": { "wow": { "how": { "far": { "can": { "we": { "go": "!" } } } } } } } }"#),
+    ser_test!(test_simple_map1, r#"map[string]interface{}{ "key":"value", }"#);
+    ser_test!(test_simple_map2, r#"map[string]interface{}{ "key":"value", "key2":"value2", }"#);
+    ser_test!(test_nested_maps,
 r#"map[string]interface{}{
   "key":map[string]interface{}{
     "nested":map[string]interface{}{
@@ -89,13 +78,10 @@ r#"map[string]interface{}{
     },
   },
 }"#);
-    }
 
-    #[test]
-    fn test_arrays() {
-        assert_eq!(ser(r#"[]"#), "[]interface{}{}");
-        assert_eq!(ser(r#"[4,5,6,7]"#), r#"[]interface{}{ 4, 5, 6, 7, }"#);
-        assert_eq!(ser(r#"[1,2,"non-homogeneous",3,null]"#),
+    ser_test!(test_empty_array, "[]interface{}{}");
+    ser_test!(test_simple_array1, r#"[]interface{}{ 4, 5, 6, 7, }"#);
+    ser_test!(test_non_homogeneous_array,
 r#"[]interface{}{
   1,
   2,
@@ -103,15 +89,12 @@ r#"[]interface{}{
   3,
   nil,
 }"#);
-    }
 
-    #[test]
-    fn test_arrays_of_arrays() {
-        assert_eq!(ser(r#"[ [1,2], [3,4] ]"#),
+    ser_test!(test_arrays_of_arrays1,
 r#"[]interface{}{
   []interface{}{ 1, 2, }, []interface{}{ 3, 4, },
 }"#);
-        assert_eq!(ser(r#"[[ [1,2], [3,4] ], [ [5,6], [7,8] ]]"#),
+    ser_test!(test_arrays_of_arrays2,
 r#"[]interface{}{
   []interface{}{
     []interface{}{ 1, 2, }, []interface{}{ 3, 4, },
@@ -119,11 +102,11 @@ r#"[]interface{}{
     []interface{}{ 5, 6, }, []interface{}{ 7, 8, },
   },
 }"#);
-        assert_eq!(ser(r#"[ ["a","b"], [1,2] ]"#),
+    ser_test!(test_arrays_of_arrays3,
 r#"[]interface{}{
   []interface{}{ "a", "b", }, []interface{}{ 1, 2, },
 }"#);
-        assert_eq!(ser(r#"[[[[[[[[[[[1,2],[3,[4,[5,[6,null]]]],"yep",7]]]]],"more"]]]]]"#),
+    ser_test!(test_arrays_of_arrays4,
 r#"[]interface{}{
   []interface{}{
     []interface{}{
@@ -152,30 +135,19 @@ r#"[]interface{}{
     },
   },
 }"#);
-    }
 
-    #[test]
-    fn test_mixed() {
-        assert_eq!(ser(r#"{"array":[1,2,3,4]}"#),
+    ser_test!(test_mixed1,
 r#"map[string]interface{}{
   "array":[]interface{}{ 1, 2, 3, 4, },
 }"#);
-        assert_eq!(ser(r#"[{"a":[2,3]},{"b":[3,4]}]"#),
+    ser_test!(test_mixed2,
 r#"[]interface{}{
   map[string]interface{}{ "a":[]interface{}{ 2, 3, }, },
   map[string]interface{}{ "b":[]interface{}{ 3, 4, }, },
 }"#);
-    }
-
-    #[test]
-    fn test_bool() {
-        assert_eq!(ser(r#"true"#), r#"true"#);
-        assert_eq!(ser(r#"false"#), r#"false"#);
-    }
-
-    #[test]
-    fn test_large() {
-        assert_eq!(ser(r#"{"name":"babel","version":"7.20.15","private":true,"type":"commonjs","scripts":{"postinstall":"husky install","bootstrap":"make bootstrap","codesandbox:build":"make build-no-bundle","build":"make build","fix":"make fix","lint":"make lint","test":"make test","version":"yarn --immutable-cache && git add yarn.lock","test:esm":"node test/esm/index.js","test:runtime:generate-absolute-runtime":"node test/runtime-integration/generate-absolute-runtime.cjs","test:runtime:bundlers":"node test/runtime-integration/bundlers.cjs","test:runtime:node":"node test/runtime-integration/node.cjs"},"packageManager":"yarn@3.2.4","devDependencies":{"@babel/cli":"^7.20.7","@babel/core":"^7.20.7","@babel/eslint-config-internal":"workspace:^","@babel/eslint-parser":"workspace:^","@babel/eslint-plugin-development":"workspace:^","@babel/eslint-plugin-development-internal":"workspace:^","@babel/plugin-proposal-dynamic-import":"^7.18.6","@babel/plugin-proposal-export-namespace-from":"^7.18.9","@babel/plugin-proposal-object-rest-spread":"^7.20.7","@babel/plugin-transform-modules-commonjs":"^7.20.11","@babel/plugin-transform-runtime":"^7.19.6","@babel/preset-env":"^7.20.2","@babel/preset-typescript":"^7.18.6","@babel/runtime":"^7.20.7","@rollup/plugin-babel":"^5.3.1","@rollup/plugin-commonjs":"^22.0.2","@rollup/plugin-json":"^4.1.0","@rollup/plugin-node-resolve":"^13.3.0","@rollup/plugin-replace":"^4.0.0","@types/node":"^18.11.7","@typescript-eslint/eslint-plugin":"^5.46.0","@typescript-eslint/parser":"^5.46.0","babel-plugin-transform-charcodes":"^0.2.0","c8":"^7.12.0","chalk":"^5.0.0","charcodes":"^0.2.0","core-js":"^3.26.0","eslint":"^8.22.0","eslint-formatter-codeframe":"^7.32.1","eslint-import-resolver-node":"^0.3.6","eslint-plugin-import":"^2.26.0","eslint-plugin-jest":"^27.1.5","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^4.2.1","glob":"^8.0.3","gulp":"^4.0.2","gulp-filter":"^7.0.0","gulp-plumber":"^1.2.1","husky":"^7.0.4","import-meta-resolve":"^1.1.1","jest":"^29.0.1","jest-light-runner":"^0.4.0","jest-worker":"^29.0.1","lint-staged":"^13.0.3","mergeiterator":"^1.4.4","prettier":"^2.7.1","rollup":"^2.78.0","rollup-plugin-dts":"^5.0.0","rollup-plugin-polyfill-node":"^0.10.2","rollup-plugin-terser":"^7.0.2","semver":"^6.3.0","shelljs":"^0.8.5","test262-stream":"^1.4.0","through2":"^4.0.0","typescript":"~4.9.3"},"workspaces":["codemods/*","eslint/*","packages/*","test/esm","test/runtime-integration/*","benchmark"],"resolutions":{"browserslist":"npm:4.21.3","caniuse-lite":"npm:1.0.30001397","core-js-compat":"npm:3.25.1","electron-to-chromium":"npm:1.4.248","glob-watcher/chokidar":"npm:^3.4.0","@types/babel__core":"link:./nope","@types/babel__traverse":"link:./nope","@babel/parser/@babel/types":"workspace:*","babel-plugin-polyfill-corejs2/@babel/compat-data":"workspace:*"},"engines":{"yarn":">=1.4.0"},"lint-staged":{"*.{js,cjs,mjs,ts}":["eslint --format=codeframe --cache --cache-strategy=content"]},"dependenciesMeta":{"core-js":{"built":false},"core-js-pure":{"built":false}},"changelog":{"repo":"babel/babel","cacheDir":".changelog","labels":{"PR: Spec Compliance :eyeglasses:":":eyeglasses: Spec Compliance","PR: Breaking Change :boom:":":boom: Breaking Change","PR: Deprecation: :loudspeaker:":":loudspeaker: Deprecation","PR: New Feature :rocket:":":rocket: New Feature","PR: Bug Fix :bug:":":bug: Bug Fix","PR: Polish :nail_care:":":nail_care: Polish","PR: Docs :memo:":":memo: Documentation","PR: Internal :house:":":house: Internal","PR: Performance :running_woman:":":running_woman: Performance","PR: Revert :leftwards_arrow_with_hook:":":leftwards_arrow_with_hook: Revert","PR: Output optimization :microscope:":":microscope: Output optimization"}}}"#),
+    ser_test!(test_true, r#"true"#);
+    ser_test!(test_false, r#"false"#);
+    ser_test!(test_large,
 r#"map[string]interface{}{
   "name":"babel",
   "version":"7.20.15",
@@ -297,8 +269,7 @@ r#"map[string]interface{}{
       "PR: Output optimization :microscope:":":microscope: Output optimization",
     },
   },
-}"#)
-    }
+}"#);
 }
 
 #[cfg(all(test,no))]
