@@ -46,6 +46,7 @@ enum Format {
     Toml,
     Json,
     Ruby,
+    Php,
     Go,
     Python,
 }
@@ -119,6 +120,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                                          outf.write(&mut toml_str.as_bytes())?; },
         (Some(Format::Ruby), _)     => { let ruby_str = lang::ruby::to_string(&data)?;
                                          outf.write(&mut ruby_str.as_bytes())?; },
+        (Some(Format::Php),  _)     => { let php_str = lang::php::to_string(&data)?;
+                                         outf.write(&mut php_str.as_bytes())?; },
         (Some(Format::Go),   _)     => { let go_str = lang::go::to_string(&data)?;
                                          outf.write(&mut go_str.as_bytes())?; },
         (Some(Format::Python),_)    => { let py_str = lang::python::to_string(&data)?;

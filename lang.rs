@@ -3,6 +3,7 @@
 pub mod serializer;
 pub mod string;
 pub mod ruby;
+pub mod php;
 pub mod go;
 pub mod python;
 
