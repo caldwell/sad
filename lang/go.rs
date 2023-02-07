@@ -310,49 +310,29 @@ mod test_other {
 
 #[cfg(test)]
 mod test_strings {
-    use super::*;
-    use crate::lang::string::test::*;
-    fn ser(prefix: &str, name: Option<&str>, s: &str) -> String {
-        let go_serializer = GoStringSerializer::new();
-        let out = go_serializer.serialize(s,prefix,name);
-        println!("out:\n{}\n---\n", out);
-        out
-    }
-    #[test]
-    fn test_control_characters() {
-        assert_eq!(ser("", None, "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f"),
+    use super::GoStringSerializer as StringSerializer;
+    use crate::str_test;
+
+    str_test!(test_control_characters,
 r#""\x00\x01\x02\x03\x04\x05\x06\a\b\t\n\v\f\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c"+
 "\x1d\x1e\x1f""#
-        );
-    }
-    #[test]
-    fn test_simple() {
-        assert_eq!(ser("", None, "Just a simple string."), r#""Just a simple string.""#);
-    }
-    #[test]
-    fn test_newlines() {
-        assert_eq!(ser("", None, "What about a few\nembedded\nnewlines?"), r#""What about a few\nembedded\nnewlines?""#);
-    }
-    #[test]
-    fn test_newlines_lots() {
-        assert_eq!(ser("", None, "What\nabout\na\nwhole\nbunch\nof\nwonderful\nembedded\nnewlines?"),
-                   r#""What\nabout\na\nwhole\nbunch\nof\nwonderful\nembedded\nnewlines?""#);
-    }
-    #[test]
-    fn test_quotes() {
-        assert_eq!(ser("", None, "\"Don't quote me on that\"",), r#"`"Don't quote me on that"`"#);
-    }
-    #[test]
-    fn test_single_quotes() {
-        assert_eq!(ser("", None, "`Lots` `of` `single` `quotes`"), r#""`Lots` `of` `single` `quotes`""#);
-    }
-    #[test]
-    fn test_double_quotes() {
-        assert_eq!(ser("", None, r#""Lots" "of" "double" "quotes""#), r#"`"Lots" "of" "double" "quotes"`"#);
-    }
-    #[test]
-    fn test_source_code() {
-        assert_eq!(ser("", Some("some code"), source_code()),
+    );
+
+    str_test!(test_simple, r#""Just a simple string.""#);
+
+    str_test!(test_newlines, r#""What about a few\nembedded\nnewlines?""#);
+
+    str_test!(test_newlines_lots, r#""What\nabout\na\nwhole\nbunch\nof\nwonderful\nembedded\nnewlines?""#);
+
+    str_test!(test_quotes, r#"`"Don't quote me on that"`"#);
+
+    str_test!(test_backticks, r#""`Lots` `of` `back``ticks`""#);
+
+    str_test!(test_single_quotes, r#""'Lots' 'of' 'single' 'quotes'""#);
+
+    str_test!(test_double_quotes, r#"`"Lots" "of" "double" "quotes"`"#);
+
+    str_test!(test_source_code,
 r#""\n// What about a giant chunk of source code??\n#[derive(Debug, PartialEq)]\nenum RenderMode {\n    "+
 "Multiline,\n    Singleline,\n}\n\nstruct StringWithLineLen {\n    pub str: String,\n    pub "+
 "linelen: usize,\n}\n\nimpl StringWithLineLen {\n    fn new() -> StringWithLineLen {\n        "+
@@ -360,10 +340,8 @@ r#""\n// What about a giant chunk of source code??\n#[derive(Debug, PartialEq)]\
 "StringWithLineLen {\n    fn add_assign(&mut self, s: &str) {\n        self.str += s;\n        if s == \"\\n\" { "+
 "// we only print newlines by themselves\n            self.linelen = 0;\n        } else {\n            "+
 "self.linelen += s.len();\n        }\n    }\n}\n\n""#);
-    }
-    #[test]
-    fn test_gettysburg() {
-        assert_eq!(ser("", None, gettysburg_address()),
+
+    str_test!(test_gettysburg,
 r#""Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived "+
 "in Liberty, and dedicated to the proposition that all men are created equal.\n\n    Now we are "+
 "engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, "+
@@ -379,10 +357,8 @@ r#""Four score and seven years ago our fathers brought forth on this continent, 
 "the last full measure of devotion—that we here highly resolve that these dead shall not have died in "+
 "vain—that this nation, under God, shall have a new birth of freedom—and that government of the "+
 "people, by the people, for the people, shall not perish from the earth.\n""#);
-    }
-    #[test]
-    fn test_gettysburg_indented() {
-        assert_eq!(ser("                  ", None, gettysburg_address()),
+
+    str_test!(test_gettysburg_indented,
                r#""Four score and seven years ago our fathers brought forth on this continent, a new "+
                   "nation, conceived in Liberty, and dedicated to the proposition that all men are "+
                   "created equal.\n\n    Now we are engaged in a great civil war, testing whether that "+
@@ -401,10 +377,8 @@ r#""Four score and seven years ago our fathers brought forth on this continent, 
                   "devotion—that we here highly resolve that these dead shall not have died in vain—that "+
                   "this nation, under God, shall have a new birth of freedom—and that government of "+
                   "the people, by the people, for the people, shall not perish from the earth.\n""#);
-    }
-    #[test]
-    fn test_very_long_string() {
-        assert_eq!(ser("", None, &"Something_very_long_with_no_space_anywhere_in_sight_".repeat(20)),
+
+    str_test!(test_very_long_string,
 r#""Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with_no_space_anywhere_in_si"+
 "ght_Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with_no_space_anywhere_i"+
 "n_sight_Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with_no_space_anywhe"+
@@ -416,5 +390,5 @@ r#""Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with
 "with_no_space_anywhere_in_sight_Something_very_long_with_no_space_anywhere_in_sight_Something_very_l"+
 "ong_with_no_space_anywhere_in_sight_Something_very_long_with_no_space_anywhere_in_sight_Something_ve"+
 "ry_long_with_no_space_anywhere_in_sight_""#);
-    }
+
 }

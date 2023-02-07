@@ -418,7 +418,136 @@ mod test_other {
     }
 }
 
+#[cfg(test)]
+mod test_strings {
+    use super::RubyStringSerializer as StringSerializer;
+    use crate::str_test;
+
+    str_test!(test_control_characters,
+r#"<<~END
+\x00\x01\x02\x03\x04\x05\x06\a\b	
+\v\f\r\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\e\x1c\x1d\x1e\x1f
+END"#);
+    str_test!(test_simple, r#"'Just a simple string.'"#);
+
+    str_test!(test_interpolation, "", None, "Maybe I've got some #{interpolation}",
+              r#"'Maybe I\'ve got some #{interpolation}'"#);
+
+    str_test!(test_newlines, r#"<<~END
+What about a few
+embedded
+newlines?
+END"#);
+
+    str_test!(test_newlines_lots,
+r#"<<~END
+What
+about
+a
+whole
+bunch
+of
+wonderful
+embedded
+newlines?
+END"#);
+
+    str_test!(test_quotes, r#"'"Don\'t quote me on that"'"#);
+
+    str_test!(test_backticks, r#"'`Lots` `of` `back``ticks`'"#);
+
+    str_test!(test_single_quotes, r#""'Lots' 'of' 'single' 'quotes'""#);
+
+    str_test!(test_double_quotes, r#"'"Lots" "of" "double" "quotes"'"#);
+
+    str_test!(test_source_code,
+r#"<<~'SOME_CODE'
+
+// What about a giant chunk of source code??
+#[derive(Debug, PartialEq)]
+enum RenderMode {
+    Multiline,
+    Singleline,
+}
+
+struct StringWithLineLen {
+    pub str: String,
+    pub linelen: usize,
+}
+
+impl StringWithLineLen {
+    fn new() -> StringWithLineLen {
+        StringWithLineLen { str: String::new(), linelen: 0 }
+    }
+}
+
+impl std::ops::AddAssign<&str> for StringWithLineLen {
+    fn add_assign(&mut self, s: &str) {
+        self.str += s;
+        if s == "\n" { // we only print newlines by themselves
+            self.linelen = 0;
+        } else {
+            self.linelen += s.len();
+        }
+    }
+}
+
+
+SOME_CODE"#);
+
+    str_test!(test_gettysburg,
+r#""Four score and seven years ago our fathers brought forth on this continent, a new nation, conceived "\
+"in Liberty, and dedicated to the proposition that all men are created equal.\n\n    Now we are "\
+"engaged in a great civil war, testing whether that nation, or any nation so conceived and so dedicated, "\
+"can long endure. We are met on a great battle-field of that war. We have come to dedicate a portion "\
+"of that field, as a final resting place for those who here gave their lives that that nation might "\
+"live. It is altogether fitting and proper that we should do this.\n\n    But, in a larger sense, we "\
+"can not dedicate—we can not consecrate—we can not hallow—this ground. The brave men, living and dead, "\
+"who struggled here, have consecrated it, far above our poor power to add or detract. The world will "\
+"little note, nor long remember what we say here, but it can never forget what they did here. It is "\
+"for us the living, rather, to be dedicated here to the unfinished work which they who fought here "\
+"have thus far so nobly advanced. It is rather for us to be here dedicated to the great task remaining "\
+"before us—that from these honored dead we take increased devotion to that cause for which they gave "\
+"the last full measure of devotion—that we here highly resolve that these dead shall not have died in "\
+"vain—that this nation, under God, shall have a new birth of freedom—and that government of the "\
+"people, by the people, for the people, shall not perish from the earth.\n""#);
+
+    str_test!(test_gettysburg_indented,
+               r#""Four score and seven years ago our fathers brought forth on this continent, a new "\
+                  "nation, conceived in Liberty, and dedicated to the proposition that all men are "\
+                  "created equal.\n\n    Now we are engaged in a great civil war, testing whether that "\
+                  "nation, or any nation so conceived and so dedicated, can long endure. We are met "\
+                  "on a great battle-field of that war. We have come to dedicate a portion of that "\
+                  "field, as a final resting place for those who here gave their lives that that nation "\
+                  "might live. It is altogether fitting and proper that we should do this.\n\n    "\
+                  "But, in a larger sense, we can not dedicate—we can not consecrate—we can not ha"\
+                  "llow—this ground. The brave men, living and dead, who struggled here, have consecrated "\
+                  "it, far above our poor power to add or detract. The world will little note, nor "\
+                  "long remember what we say here, but it can never forget what they did here. It is "\
+                  "for us the living, rather, to be dedicated here to the unfinished work which they "\
+                  "who fought here have thus far so nobly advanced. It is rather for us to be here "\
+                  "dedicated to the great task remaining before us—that from these honored dead we take "\
+                  "increased devotion to that cause for which they gave the last full measure of "\
+                  "devotion—that we here highly resolve that these dead shall not have died in vain—that "\
+                  "this nation, under God, shall have a new birth of freedom—and that government of "\
+                  "the people, by the people, for the people, shall not perish from the earth.\n""#);
+
+    str_test!(test_very_long_string,
+r#"'Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with_no_space_anywhere_in_si'\
+'ght_Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with_no_space_anywhere_i'\
+'n_sight_Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with_no_space_anywhe'\
+'re_in_sight_Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with_no_space_an'\
+'ywhere_in_sight_Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with_no_spac'\
+'e_anywhere_in_sight_Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with_no_'\
+'space_anywhere_in_sight_Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_with'\
+'_no_space_anywhere_in_sight_Something_very_long_with_no_space_anywhere_in_sight_Something_very_long_'\
+'with_no_space_anywhere_in_sight_Something_very_long_with_no_space_anywhere_in_sight_Something_very_l'\
+'ong_with_no_space_anywhere_in_sight_Something_very_long_with_no_space_anywhere_in_sight_Something_ve'\
+'ry_long_with_no_space_anywhere_in_sight_'"#);
+}
+
 #[test]
+#[cfg(all(test,no))]
 fn test_strings() {
     use crate::lang::string::test::*;
     let ruby_serializer = RubyStringSerializer::new();

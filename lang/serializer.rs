@@ -611,30 +611,50 @@ impl<'a> ser::SerializeStructVariant for &'a mut Serializer {
 
 #[cfg(test)]
 pub mod test {
-    #[macro_export]
-    macro_rules! ser_test {
-        ( $name:ident, $expect:expr ) => {
-            #[test]
-            fn $name() {
-                let json = $crate::lang::serializer::test::$name::data();
-                let data: serde_yaml::Value = serde_json::from_str(json).expect(&format!("bad json in test {}", stringify!($name)));
-                let out = to_string(&data).expect("serialization failed");
-                let expect = $expect;
-                if (out != expect) {
-                    let (ofile, oline, ocol) = $crate::lang::serializer::test::$name::position();
-                    panic!("Serializer output did not match expected values\n\
-                            Output:\n\
-                            {out}\n\
-                            {tfile}:{tline}:{tcol}:  Expected:\n\
-                            {expect}\n\
-                            {ofile}:{oline}:{ocol}:  Original JSON:\n\
-                            {json}\n",
-                           tfile=file!(), tline=line!(), tcol=column!());
-                }
-            }
+    pub fn str_tester<T>(serialize: impl Fn(T) -> (String, String),
+                         data: T,
+                         expect: &str,
+                         test_loc: (&str,u32,u32),
+                         def_loc: (&str,u32,u32),
+                         name: &str)
+    {
+        let (out, orig) = serialize(data);
+        if out != expect {
+            let (dfile, dline, dcol) = def_loc;
+            let (tfile, tline, tcol) = test_loc;
+            panic!("{name} output did not match expected values\n\
+                    Output:\n\
+                    {out}\n\
+                    {tfile}:{tline}:{tcol}:  Expected:\n\
+                    {expect}\n\
+                    {dfile}:{dline}:{dcol}:  Original string:\n\
+                    {orig:?}\n",
+            );
         }
     }
 
+    #[macro_export]
+    macro_rules! ser_test {
+        ($test_name:ident, $expect:expr) => {
+            #[test]
+            fn $test_name() {
+                $crate::lang::serializer::test::str_tester(|json: $crate::lang::serializer::test::TestDataType| {
+                               let data: serde_yaml::Value = serde_json::from_str(json).expect(&format!("bad json in test {}", stringify!($name)));
+                               let out = to_string(&data).expect("serialization failed");
+                               (out, json.into())
+                           },
+                           $crate::lang::serializer::test::$test_name::data(),
+                           $expect,
+                           (file!(), line!(), column!()),
+                           $crate::lang::serializer::test::$test_name::position(),
+                           "Serializer")
+            }
+        };
+    }
+
+    pub type TestDataType=&'static str;
+
+    #[macro_export]
     macro_rules! define_test_data {
         ( $name:ident, $($data:expr),* ) => {
             pub mod $name {
