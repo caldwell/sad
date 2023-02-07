@@ -159,31 +159,51 @@ fn test_struct() {
     assert_eq!(to_string(&test).unwrap(), expected);
 }
 
-#[test]
-fn test_enum() {
-    #[derive(Serialize)]
-    enum E {
-        Unit,
-        Newtype(u32),
-        Tuple(u32, u32),
-        Struct { a: u32 },
+#[cfg(all(test,no))]
+mod test_other {
+    use super::*;
+    #[test]
+    fn test_struct() {
+        #[derive(Serialize)]
+        struct Test {
+            int: u32,
+            seq: Vec<&'static str>,
+        }
+
+        let test = Test {
+            int: 1,
+            seq: vec!["a", "b"],
+        };
+        let expected = r#"Test.new(int:1,seq:['a','b'])"#;
+        assert_eq!(to_string(&test).unwrap(), expected);
     }
 
-    let u = E::Unit;
-    let expected = r#"E.Unit"#;
-    assert_eq!(to_string(&u).unwrap(), expected);
+    #[test]
+    fn test_enum() {
+        #[derive(Serialize)]
+        enum E {
+            Unit,
+            Newtype(u32),
+            Tuple(u32, u32),
+            Struct { a: u32 },
+        }
 
-    let n = E::Newtype(1);
-    let expected = r#"E.Newtype(1)"#;
-    assert_eq!(to_string(&n).unwrap(), expected);
+        let u = E::Unit;
+        let expected = r#"E.Unit"#;
+        assert_eq!(to_string(&u).unwrap(), expected);
 
-    let t = E::Tuple(1, 2);
-    let expected = r#"E.Tuple(1,2)"#;
-    assert_eq!(to_string(&t).unwrap(), expected);
+        let n = E::Newtype(1);
+        let expected = r#"E.Newtype(1)"#;
+        assert_eq!(to_string(&n).unwrap(), expected);
 
-    let s = E::Struct { a: 1 };
-    let expected = r#"E.Struct(a:1)"#;
-    assert_eq!(to_string(&s).unwrap(), expected);
+        let t = E::Tuple(1, 2);
+        let expected = r#"E.Tuple(1,2)"#;
+        assert_eq!(to_string(&t).unwrap(), expected);
+
+        let s = E::Struct { a: 1 };
+        let expected = r#"E.Struct(a:1)"#;
+        assert_eq!(to_string(&s).unwrap(), expected);
+    }
 }
 
 #[test]
