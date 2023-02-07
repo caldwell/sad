@@ -13,21 +13,27 @@ mod lang;
 const USAGE: &'static str = "
 Usage:
   sad --help
-  sad   [-h] [--check] [--ugly] [--in=<input-format>] [--out=<output-format>] [<in-file>] [<out-file>]
-  json2 [-h] [--check] [--ugly] [--out=<output-format>] [<in-file>] [<out-file>]
-  yaml2 [-h] [--check] [--ugly] [--out=<output-format>] [<in-file>] [<out-file>]
-  toml2 [-h] [--check] [--ugly] [--out=<output-format>] [<in-file>] [<out-file>]
+  sad   [-h] [--check] [--ugly] [--in=<format>] [--out=<format>] [<in-file>] [<out-file>]
+  json2 [-h] [--check] [--ugly] [--out=<format>] [<in-file>] [<out-file>]
+  yaml2 [-h] [--check] [--ugly] [--out=<format>] [<in-file>] [<out-file>]
+  toml2 [-h] [--check] [--ugly] [--out=<format>] [<in-file>] [<out-file>]
 
 Options:
-  -h --help                 Show this message.
-  -i --id=<input-format>    Parse input as <input-format>.
-                            If not specified it will try to guess the input
-                            format from the filename extension.
-  -o --out=<output-format>  Format output as <output-format>.
-                            If not specified it will use the input format.
-  -u --ugly                 Don't pretty-print the output (JSON and TOML only,
-                            YAML ignores this).
-     --check                Don't output. Parse the input and report errors.
+  -h --help          Show this message.
+
+  -i --in=<format>   Select input format. One of: json yaml toml
+                     If not specified it will try to guess the input format from
+                     the <in-file> extension.
+
+  -o --out=<format>  Select output format.
+                     One of: json yaml toml ruby php go python
+                     If not specified it try to guess from the <out-file>
+                     extension. If there is no <out-file> then it will use the
+                     input format.
+
+  -u --ugly          Don't pretty-print the output (JSON and TOML only)
+
+     --check         Don't output. Parse the input and report errors.
 ";
 
 #[derive(Debug, serde::Deserialize)]
