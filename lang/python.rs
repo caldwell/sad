@@ -121,24 +121,19 @@ r#"[
 
     ser_test!(test_arrays_of_arrays1,
 r#"[
-  [ 1, 2 ],
-  [ 3, 4 ]
+  [ 1, 2 ], [ 3, 4 ]
 ]"#);
     ser_test!(test_arrays_of_arrays2,
 r#"[
   [
-    [ 1, 2 ],
-    [ 3, 4 ]
-  ],
-  [
-    [ 5, 6 ],
-    [ 7, 8 ]
+    [ 1, 2 ], [ 3, 4 ]
+  ], [
+    [ 5, 6 ], [ 7, 8 ]
   ]
 ]"#);
     ser_test!(test_arrays_of_arrays3,
 r#"[
-  [ "a", "b" ],
-  [ 1, 2 ]
+  [ "a", "b" ], [ 1, 2 ]
 ]"#);
     ser_test!(test_arrays_of_arrays4,
 r#"[
@@ -151,15 +146,9 @@ r#"[
               [
                 [
                   [
-                    [ 1, 2 ],
-                    [
-                      3,
-                      [
-                        4,
-                        [
-                          5,
-                          [ 6, nil ]
-                        ]
+                    [ 1, 2 ], [
+                      3, [
+                        4, [ 5, [ 6, nil ] ]
                       ]
                     ],
                     "yep",
@@ -182,8 +171,7 @@ r#"{
 }"#);
     ser_test!(test_mixed2,
 r#"[
-  { "a": [ 2, 3 ] },
-  { "b": [ 3, 4 ] }
+  { "a": [ 2, 3 ] }, { "b": [ 3, 4 ] }
 ]"#);
     ser_test!(test_true, r#"true"#);
     ser_test!(test_false, r#"false"#);
