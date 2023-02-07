@@ -47,6 +47,7 @@ enum Format {
     Json,
     Ruby,
     Go,
+    Python,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -120,6 +121,8 @@ fn main() -> Result<(), Box<dyn Error>> {
                                          outf.write(&mut ruby_str.as_bytes())?; },
         (Some(Format::Go),   _)     => { let go_str = lang::go::to_string(&data)?;
                                          outf.write(&mut go_str.as_bytes())?; },
+        (Some(Format::Python),_)    => { let py_str = lang::python::to_string(&data)?;
+                                         outf.write(&mut py_str.as_bytes())?; },
         (None,_) => unreachable!(),
     }
 
