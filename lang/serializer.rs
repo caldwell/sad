@@ -616,7 +616,7 @@ pub mod test {
         ( $name:ident, $expect:expr ) => {
             #[test]
             fn $name() {
-                let json = $crate::lang::serializer::test::$name;
+                let json = $crate::lang::serializer::test::$name::data();
                 let data: serde_yaml::Value = serde_json::from_str(json).expect(&format!("bad json in test {}", stringify!($name)));
                 let out = to_string(&data).expect("serialization failed");
                 let expect = $expect;
@@ -636,10 +636,9 @@ pub mod test {
     }
 
     macro_rules! define_test_data {
-        ( $name:ident, $str:expr ) => {
-            #[allow(non_upper_case_globals)]
-            pub const $name : &str = $str;
+        ( $name:ident, $($data:expr),* ) => {
             pub mod $name {
+                pub fn data() -> super::TestDataType { ( $($data .into() ),* ) }
                 pub const fn position() -> (&'static str,u32,u32) { (file!(), line!(), column!()) }
             }
         }
