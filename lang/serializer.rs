@@ -69,14 +69,6 @@ impl std::ops::AddAssign<&str> for StringWithLineLen {
     }
 }
 
-pub struct Serializer {
-    op: VecDeque<Opcode>,
-    output: StringWithLineLen,
-    prefix: String,
-    indent: String,
-    lang: Language,
-}
-
 pub struct ArrLit(pub &'static str, pub &'static str, pub &'static str);
 impl ArrLit {
     pub fn start(&self) -> &'static str { self.0 }
@@ -126,6 +118,14 @@ pub struct Language {
     pub false_lit: &'static str,
     pub null_lit:  &'static str,
     pub strser:    StringSerializer<'static>,
+}
+
+pub struct Serializer {
+    op: VecDeque<Opcode>,
+    output: StringWithLineLen,
+    prefix: String,
+    indent: String,
+    lang: Language,
 }
 
 impl Serializer {
