@@ -77,6 +77,9 @@ impl Esc {
     /// quoted string, since they cannot be escaped and we don't want control characters going though
     /// verbatim. Hitting this will take a [`QuoteStyle`] out of the running.
     pub const Ill: u8 = 3;
+    /// The character at the index should be escaped by calling the [`StringSerializer::custom_escape`]
+    /// function.
+    pub const Cus: u8 = 4;
     /// The character at this index should be escaped as a `\` followed by the ASCII
     /// character passed in. Unicode replacement characters are not supported.
     pub const fn Rep(c: char) -> u8 { if !c.is_ascii() { panic!("escape replacements must be ascii") }
@@ -180,6 +183,7 @@ impl<T:Default + PartialOrd, W:Default> Lowest<T,W> {
 pub trait StringSerializer<'a> {
     fn quote_styles(&self, ) -> Vec<QuoteStyle<'a>>;
     fn valid_bare_str(&self, _s: &str) -> bool { true }
+    fn custom_escape(&self, _c: char) -> Option<String> { None }
 
     fn serialize(&self, s: &str, prefix: &str, name: Option<&str>) -> String {
         #[derive(Default, Debug)]
@@ -229,6 +233,8 @@ pub trait StringSerializer<'a> {
                     (Esc::No, _)                                         => { stats.len += 1; pos += 1; },
                     (Esc::Ill , _)                                       => { return None; }
                     (Esc::Hex , _) | (Esc::Oct , _)                      => { stats.len += 4; pos += 4; stats.escapes += 1; }
+                    (Esc::Cus , _)                                       => { let Some(esc) = self.custom_escape(c) else { return None };
+                                                                              stats.len += esc.len(); pos += esc.len(); stats.escapes += 1; }
                     (_        , _)                                       => { stats.len += 2; pos += 2; stats.escapes += 1; }
                 }
             }
@@ -327,6 +333,8 @@ pub trait StringSerializer<'a> {
                 (Esc::No,  _)                                         => { rep.push(c); pos += 1; },
                 (Esc::Hex, _)                                         => { rep += &format!(r"\x{:02x}", c as u8); pos += 4; }
                 (Esc::Oct, _)                                         => { rep += &format!(r"\{:03o}",  c as u8); pos += 4; }
+                (Esc::Cus, _)                                         => { let esc = self.custom_escape(c).unwrap(); // already checked, above
+                                                                           rep += &esc; pos += esc.len(); }
                 (replace,  _)                                         => { rep.push('\\');
                                                                            rep.push(replace as char); pos += 2; }
             }
