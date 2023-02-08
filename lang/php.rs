@@ -7,6 +7,7 @@ use crate::lang::serializer::{Serializer,Language,ArrLit,MapLit,TupLit,MapKey,Re
 use crate::lang::string::*;
 
 #[inline]
+#[allow(dead_code)]
 pub fn to_vec<T: Serialize>(value: &T) -> Result<Vec<u8>> {
     let mut writer = Vec::with_capacity(128);
     to_writer(&mut writer, value)?;
@@ -14,6 +15,7 @@ pub fn to_vec<T: Serialize>(value: &T) -> Result<Vec<u8>> {
 }
 
 #[inline]
+#[allow(dead_code)]
 pub fn to_string<T: Serialize>(value: &T) -> Result<String> {
     let vec = to_vec(value)?;
     let string = unsafe {
