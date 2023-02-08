@@ -232,6 +232,7 @@ impl<'a> StringSerializer<'a> {
                 if c > '\x7f' { stats.len+=1; pos+=1; continue; } // Just let unicode slide
                 match (quote.escapes[c as usize], &quote.multiline) {
                     (Esc::No, Multiline::No)     if c == '\n'            => { return None; }
+                    (Esc::No, Multiline::Yes) |
                     (Esc::No, Multiline::Indent) if c == '\n'            => { stats.len += 1 + prefix.len(); pos = prefix.len(); }
                     (Esc::No, Multiline::Yes) |
                     (Esc::No, Multiline::Indent) if c == '\t'            => { stats.len += 1; pos += 1; }
@@ -326,6 +327,8 @@ impl<'a> StringSerializer<'a> {
             }
             if c > '\x7f' { rep.push(c); pos +=1; continue; } // Just let unicode slide
             match (quote.escapes[c as usize], &quote.multiline) {
+                (Esc::No,  Multiline::Yes)    if c == '\n'            => { rep.push(c);
+                                                                           pos = 0; }
                 (Esc::No,  Multiline::Indent) if c == '\n'            => { rep.push(c);
                                                                            rep += prefix;
                                                                            pos = prefix.len(); }
