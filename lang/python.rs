@@ -134,7 +134,7 @@ r#"[
   2,
   "non-homogeneous",
   3,
-  nil
+  None
 ]"#);
 
     ser_test!(test_arrays_of_arrays1,
@@ -166,7 +166,7 @@ r#"[
                   [
                     [ 1, 2 ], [
                       3, [
-                        4, [ 5, [ 6, nil ] ]
+                        4, [ 5, [ 6, None ] ]
                       ]
                     ],
                     "yep",

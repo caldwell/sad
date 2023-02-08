@@ -373,7 +373,7 @@ impl<'a, W: Write> ser::Serializer for &'a mut Serializer<W> {
         value.serialize(self)
     }
     fn serialize_unit(self) -> Result<()> {
-        *self += "nil";
+        *self += self.lang.null_lit;
         Ok(())
     }
     fn serialize_unit_struct(self, name: &'static str) -> Result<()> {
