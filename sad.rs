@@ -124,14 +124,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                                          outf.write(&mut toml_str.as_bytes())?; },
         (Some(Format::Toml), true)  => { let toml_str = toml::to_string(&data)?;
                                          outf.write(&mut toml_str.as_bytes())?; },
-        (Some(Format::Ruby), _)     => { let ruby_str = lang::ruby::to_string(&data)?;
-                                         outf.write(&mut ruby_str.as_bytes())?; },
-        (Some(Format::Php),  _)     => { let php_str = lang::php::to_string(&data)?;
-                                         outf.write(&mut php_str.as_bytes())?; },
-        (Some(Format::Go),   _)     => { let go_str = lang::go::to_string(&data)?;
-                                         outf.write(&mut go_str.as_bytes())?; },
-        (Some(Format::Python),_)    => { let py_str = lang::python::to_string(&data)?;
-                                         outf.write(&mut py_str.as_bytes())?; },
+        (Some(Format::Ruby), _)     => lang::ruby::to_writer(outf, &data)?,
+        (Some(Format::Php),  _)     => lang::php::to_writer(outf, &data)?,
+        (Some(Format::Go),   _)     => lang::go::to_writer(outf, &data)?,
+        (Some(Format::Python),_)    => lang::python::to_writer(outf, &data)?,
         (None,_) => unreachable!(),
     }
 

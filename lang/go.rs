@@ -1,11 +1,30 @@
 // Copyright © 2023 David Caldwell <david@porkrind.org>
 
 use serde::Serialize;
+use std::io::Write;
 
 use crate::lang::serializer::{Serializer,Language,ArrLit,MapLit,TupLit,MapKey,Result,SepStyle};
 
-pub fn to_string<'a, 'b, T: Serialize>(value: &'a T) -> Result<String> {
-    let mut serializer = Serializer::new(Language{array_lit:  ArrLit("[]interface{}{", "," ,"}"),
+#[inline]
+pub fn to_vec<T: Serialize>(value: &T) -> Result<Vec<u8>> {
+    let mut writer = Vec::with_capacity(128);
+    to_writer(&mut writer, value)?;
+    Ok(writer)
+}
+
+#[inline]
+pub fn to_string<T: Serialize>(value: &T) -> Result<String> {
+    let vec = to_vec(value)?;
+    let string = unsafe {
+        // We do not emit invalid UTF-8.
+        String::from_utf8_unchecked(vec)
+    };
+    Ok(string)
+}
+
+pub fn to_writer<'a, 'b, W:Write, T: Serialize>(writer: W, value: &'a T) -> Result<()> {
+    let mut serializer = Serializer::new(writer,
+                                         Language{array_lit:  ArrLit("[]interface{}{", "," ,"}"),
                                                   map_lit:    MapLit("map[string]interface{}{", ":", ",", "}" ),
                                                   tuple_lit:  TupLit("[]interface{}{", ",",  "}" ),
                                                   map_key:    MapKey::AlwaysQuote,
@@ -14,7 +33,7 @@ pub fn to_string<'a, 'b, T: Serialize>(value: &'a T) -> Result<String> {
                                                   false_lit: "false",
                                                   null_lit:  "nil",
                                                   strser: GoStringSerializer::new()});
-    serializer.to_string(value)
+    serializer.serialize(value)
 }
 
 use crate::lang::string::*;

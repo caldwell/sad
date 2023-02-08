@@ -1,6 +1,6 @@
 // Copyright © 2023 David Caldwell <david@porkrind.org>
 
-use std::fmt::{self, Display};
+use std::{fmt::{self, Display}, io::Write};
 use serde::{ser, Serialize};
 use std::collections::VecDeque;
 
@@ -29,6 +29,13 @@ impl Display for Error {
     }
 }
 
+impl From<std::io::Error> for Error {
+    fn from(e: std::io::Error) -> Self {
+        use ser::Error;
+        Self::custom(e)
+    }
+}
+
 pub const HEURISTIC_LINE_LEN_LIMIT: usize = 100;  // How long can a line get before it becomes annoying?
 pub const HEURISTIC_ITEM_COUNT_LIMIT: usize = 4;  // Hom many short things can a map/array have before they become noise?
 pub const HEURISTIC_ITEM_DEPTH_LIMIT: usize = 1;  // How many nested structures should fit on a line?
@@ -47,25 +54,24 @@ enum RenderMode {
     Singleline,
 }
 
-struct StringWithLineLen {
-    str: String,
+struct WriterWithLineLen<W> {
+    writer: W,
     linelen: usize,
 }
 
-impl StringWithLineLen {
-    fn new() -> StringWithLineLen {
-        StringWithLineLen { str: String::new(), linelen: 0 }
+impl<W: Write> WriterWithLineLen<W> {
+    fn new(writer: W) -> WriterWithLineLen<W> {
+        WriterWithLineLen { writer: writer, linelen: 0 }
     }
-}
 
-impl std::ops::AddAssign<&str> for StringWithLineLen {
-    fn add_assign(&mut self, s: &str) {
-        self.str += s;
+    fn write(&mut self, s: &str) -> Result<()> {
+        self.writer.write_all(s.as_bytes())?;
         if s == "\n" { // we only print newlines by themselves
             self.linelen = 0;
         } else {
             self.linelen += s.len();
         }
+        Ok(())
     }
 }
 
@@ -120,51 +126,52 @@ pub struct Language {
     pub strser:    StringSerializer<'static>,
 }
 
-pub struct Serializer {
+pub struct Serializer<W> {
     op: VecDeque<Opcode>,
-    output: StringWithLineLen,
+    output: WriterWithLineLen<W>,
     prefix: String,
     indent: String,
     lang: Language,
 }
 
-impl Serializer {
-    pub fn new(language: Language) -> Serializer {
+impl<W: Write> Serializer<W> {
+    pub fn new(writer: W, language: Language) -> Serializer<W> {
         Serializer {
             op: VecDeque::new(),
-            output: StringWithLineLen::new(),
+            output: WriterWithLineLen::new(writer),
             prefix: String::new(),
             indent: "  ".to_string(),
             lang: language,
         }
     }
-    pub fn to_string<'a, T: Serialize>(&mut self, value: &'a T) -> Result<String> {
+    pub fn serialize<'a, T: Serialize>(&mut self, value: &'a T) -> Result<()> {
         self.newchunk();
         value.serialize(&mut *self)?;
-        self.flush(None);
+        self.flush()?;
         #[cfg(feature="ser_debug")]
         for op in self.op.iter() {
             println!("{:?}", op);
         }
-        Ok(std::mem::take(&mut self.output.str))
+        Ok(())
+        // Ok(std::mem::take(&mut self.output.str))
     }
 
-    fn newline_and_indent(&mut self) {
-        self.output += "\n";
-        self.output += &self.prefix;
+    fn newline_and_indent(&mut self) -> Result<()> {
+        self.output.write("\n")?;
+        self.output.write(&self.prefix)
     }
 
-    fn newline_and_indent_more(&mut self) {
+    fn newline_and_indent_more(&mut self) -> Result<()> {
         self.prefix += &self.indent;
-        self.newline_and_indent();
+        self.newline_and_indent()
     }
 
-    fn newline_and_indent_less(&mut self) {
+    fn newline_and_indent_less(&mut self) -> Result<()> {
         self.prefix.truncate(self.prefix.len().saturating_sub(self.indent.len()));
-        self.newline_and_indent();
+        self.newline_and_indent()
     }
 
-    fn flush(&mut self, _replace: Option<&str>) {
+    fn flush(&mut self) -> Result<()> {
         let mut state = RenderMode::Multiline;
         let mut depth:i64 = 0;
 
@@ -172,16 +179,16 @@ impl Serializer {
             #[cfg(feature="ser_debug")]
             println!("Next: depth={} {:?}", depth, self.op.front());
             match (&state, self.op.front()) {
-                (_, None) => return,
+                (_, None) => return Ok(()),
                 (RenderMode::Singleline, Some(Opcode::Sep)) => {
-                    self.output += " ";
+                    self.output.write(" ")?;
                 },
                 (RenderMode::Multiline, Some(Opcode::Sep)) => {
-                    self.output += "\n";
-                    self.output += &self.prefix;
+                    self.output.write("\n")?;
+                    self.output.write(&self.prefix)?;
                 },
                 (_, Some(Opcode::Chunk(data))) => {
-                    self.output += data;
+                    self.output.write(data)?;
                 },
                 (_, Some(Opcode::In)) => {
                     if state == RenderMode::Singleline {
@@ -215,16 +222,16 @@ impl Serializer {
                     }
 
                     if state == RenderMode::Multiline {
-                        self.newline_and_indent_more();
+                        self.newline_and_indent_more()?;
                     } else {
-                        self.output += " ";
+                        self.output.write(" ")?;
                     }
                 },
                 (_, Some(Opcode::Out)) => {
                     if state == RenderMode::Multiline {
-                        self.newline_and_indent_less();
+                        self.newline_and_indent_less()?;
                     } else {
-                        self.output += " ";
+                        self.output.write(" ")?;
                     }
                     if depth == 0 {
                         #[cfg(feature="ser_debug")]
@@ -302,13 +309,13 @@ impl Serializer {
     }
 }
 
-impl<'a> std::ops::AddAssign<&str> for Serializer {
+impl<'a, W: Write> std::ops::AddAssign<&str> for Serializer<W> {
     fn add_assign(&mut self, s: &str) {
         self.out(s);
     }
 }
 
-impl<'a> ser::Serializer for &'a mut Serializer {
+impl<'a, W: Write> ser::Serializer for &'a mut Serializer<W> {
     type Ok = ();
     type Error = Error;
     type SerializeSeq = Self;
@@ -428,7 +435,7 @@ impl<'a> ser::Serializer for &'a mut Serializer {
     }
 }
 
-impl<'a> ser::SerializeSeq for &'a mut Serializer {
+impl<'a, W: Write> ser::SerializeSeq for &'a mut Serializer<W> {
     type Ok = ();
     type Error = Error;
 
@@ -456,7 +463,7 @@ impl<'a> ser::SerializeSeq for &'a mut Serializer {
     }
 }
 
-impl<'a> ser::SerializeTuple for &'a mut Serializer {
+impl<'a, W: Write> ser::SerializeTuple for &'a mut Serializer<W> {
     type Ok = ();
     type Error = Error;
 
@@ -483,7 +490,7 @@ impl<'a> ser::SerializeTuple for &'a mut Serializer {
     }
 }
 
-impl<'a> ser::SerializeTupleStruct for &'a mut Serializer {
+impl<'a, W: Write> ser::SerializeTupleStruct for &'a mut Serializer<W> {
     type Ok = ();
     type Error = Error;
 
@@ -505,7 +512,7 @@ impl<'a> ser::SerializeTupleStruct for &'a mut Serializer {
     }
 }
 
-impl<'a> ser::SerializeTupleVariant for &'a mut Serializer {
+impl<'a, W: Write> ser::SerializeTupleVariant for &'a mut Serializer<W> {
     type Ok = ();
     type Error = Error;
 
@@ -528,7 +535,7 @@ impl<'a> ser::SerializeTupleVariant for &'a mut Serializer {
 }
 
 
-impl<'a> ser::SerializeMap for &'a mut Serializer {
+impl<'a, W: Write> ser::SerializeMap for &'a mut Serializer<W> {
     type Ok = ();
     type Error = Error;
 
@@ -559,7 +566,7 @@ impl<'a> ser::SerializeMap for &'a mut Serializer {
     }
 }
 
-impl<'a> ser::SerializeStruct for &'a mut Serializer {
+impl<'a, W: Write> ser::SerializeStruct for &'a mut Serializer<W> {
     type Ok = ();
     type Error = Error;
 
@@ -583,7 +590,7 @@ impl<'a> ser::SerializeStruct for &'a mut Serializer {
     }
 }
 
-impl<'a> ser::SerializeStructVariant for &'a mut Serializer {
+impl<'a, W: Write> ser::SerializeStructVariant for &'a mut Serializer<W> {
     type Ok = ();
     type Error = Error;
 
