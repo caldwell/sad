@@ -144,11 +144,6 @@ pub struct QuoteStyle<'a> {
     pub multiline: Multiline,
 }
 
-#[derive(Debug, Clone)]
-pub struct StringSerializer<'a> {
-    styles: Vec<QuoteStyle<'a>>,
-}
-
 #[derive(Default, Debug)]
 struct Highest<T: Default, W: Default> {
     max: T,
@@ -177,6 +172,11 @@ impl<T:Default + PartialOrd, W:Default> Lowest<T,W> {
             self.who = Some(w);
         }
     }
+}
+
+#[derive(Debug, Clone)]
+pub struct StringSerializer<'a> {
+    styles: Vec<QuoteStyle<'a>>,
 }
 
 impl<'a> StringSerializer<'a> {
