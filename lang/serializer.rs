@@ -630,9 +630,9 @@ pub mod test {
             let (dfile, dline, dcol) = def_loc;
             let (tfile, tline, tcol) = test_loc;
             panic!("{name} output did not match expected values\n\
-                    Output:\n\
+                    {tfile}:{tline}:{tcol}:  Output:\n\
                     {out}\n\
-                    {tfile}:{tline}:{tcol}:  Expected:\n\
+                    Expected:\n\
                     {expect}\n\
                     {dfile}:{dline}:{dcol}:  Original string:\n\
                     {orig:?}\n",
