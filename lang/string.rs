@@ -186,6 +186,8 @@ pub trait StringSerializer<'a> {
     fn custom_escape(&self, _c: char) -> Option<String> { None }
 
     fn serialize(&self, s: &str, prefix: &str, name: Option<&str>) -> String {
+        #[cfg(feature="str_debug")] println!("serializing [name={:?}, prefix={:?}]: {:?}", name, prefix, s);
+
         #[derive(Default, Debug)]
         struct Stats {
             escapes:  usize,
@@ -224,14 +226,17 @@ pub trait StringSerializer<'a> {
                 }
                 if c > '\x7f' { stats.len+=1; pos+=1; continue; } // Just let unicode slide
                 match (quote.escapes[c as usize], &quote.multiline) {
-                    (Esc::No, Multiline::No)     if c == '\n'            => { return None; }
+                    (Esc::No, Multiline::No)     if c == '\n'            => { #[cfg(feature="str_debug")] println!("[{}] {:?} reject naked \\n in Multiline::No", i, c);
+                                                                              return None; }
                     (Esc::No, Multiline::Yes) |
                     (Esc::No, Multiline::Indent) if c == '\n'            => { stats.len += 1 + prefix.len(); pos = prefix.len(); }
                     (Esc::No, Multiline::Yes) |
                     (Esc::No, Multiline::Indent) if c == '\t'            => { stats.len += 1; pos += 1; }
-                    (Esc::No, _)                 if c.is_ascii_control() => { return None; } // Don't ever serialize unescaped control characters
+                    (Esc::No, _)                 if c.is_ascii_control() => { #[cfg(feature="str_debug")] println!("[{}] {:?} reject naked control char", i, c);
+                                                                              return None; } // Don't ever serialize unescaped control characters
                     (Esc::No, _)                                         => { stats.len += 1; pos += 1; },
-                    (Esc::Ill , _)                                       => { return None; }
+                    (Esc::Ill , _)                                       => { #[cfg(feature="str_debug")] println!("[{}] {:?} reject Ill", i, c);
+                                                                              return None; }
                     (Esc::Hex , _) | (Esc::Oct , _)                      => { stats.len += 4; pos += 4; stats.escapes += 1; }
                     (Esc::Cus , _)                                       => { let Some(esc) = self.custom_escape(c) else { return None };
                                                                               stats.len += esc.len(); pos += esc.len(); stats.escapes += 1; }
