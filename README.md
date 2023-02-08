@@ -1,6 +1,6 @@
 Sad
 ===
-_*S*calar, *A*rray, *D*ictionary_
+_**S**calar, **A**rray, **D**ictionary_
 
 Convert between JSON, YAML, TOML formats.
 
