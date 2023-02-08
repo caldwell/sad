@@ -176,27 +176,10 @@ impl<T:Default + PartialOrd, W:Default> Lowest<T,W> {
     }
 }
 
-#[derive(Debug)]
-pub struct StringSerializer<'a> {
-    styles: Vec<QuoteStyle<'a>>,
-}
+pub trait StringSerializer<'a> {
+    fn quote_styles(&self, ) -> Vec<QuoteStyle<'a>>;
 
-impl<'a> StringSerializer<'a> {
-
-    pub fn new() -> StringSerializer<'a> { StringSerializer{ styles: Vec::new() } }
-    pub fn add_quote_style(mut self, style: QuoteStyle<'a>) -> Self {
-        self.styles.push(style);
-        self
-    }
-
-    pub fn add_quote_styles(mut self, styles: Vec<QuoteStyle<'a>>) -> Self {
-        for s in styles {
-            self.styles.push(s);
-        }
-        self
-    }
-
-    pub fn serialize(&self, s: &str, prefix: &str, name: Option<&str>) -> String {
+    fn serialize(&self, s: &str, prefix: &str, name: Option<&str>) -> String {
         #[derive(Default, Debug)]
         struct Stats {
             escapes:  usize,
@@ -212,7 +195,8 @@ impl<'a> StringSerializer<'a> {
         }
         let mut bests = Bests::default();
         let heredoc_name = name.unwrap_or("END").to_ascii_uppercase().replace(|c:char| !c.is_ascii_uppercase(), "_").trim_start_matches('_').to_string();
-        let stats: Vec<_> = self.styles.iter().enumerate().filter_map(|(i,quote)| {
+        let styles = self.quote_styles();
+        let stats: Vec<_> = styles.iter().enumerate().filter_map(|(i,quote)| {
             let mut stats = Stats::default();
             let (startlen, endlen) = match (&quote.rep, &quote.multiline) {
                 (QuoteRep::Same(s),       _)                  => (s.len(), s.len()),
@@ -273,7 +257,7 @@ impl<'a> StringSerializer<'a> {
         println!("bests={:?}", bests);
 
         let stats = &stats[stats.binary_search_by_key(&bests.best_in_class.who.unwrap(), |&(i, _)| i).expect("This better work")].1;
-        let quote = &self.styles[bests.best_in_class.who.unwrap()];
+        let quote = &styles[bests.best_in_class.who.unwrap()];
 
         let mut heredoc_str_start: String;
         let mut heredoc_str_end:   String;
@@ -375,7 +359,8 @@ pub mod test {
             fn $test_name() {
                 $crate::lang::serializer::test::str_tester(|data: $crate::lang::string::test::TestDataType| {
                                let (prefix, key, orig) = data;
-                               let serializer = StringSerializer::new();
+                               let serializer = TestStringSerializer{};
+                    use $crate::lang::string::StringSerializer;
                                (serializer.serialize(&orig,prefix,key), orig)
                            },
                            $data,

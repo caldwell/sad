@@ -4,6 +4,7 @@ use serde::Serialize;
 use std::io::Write;
 
 use crate::lang::serializer::{Serializer,Language,ArrLit,MapLit,TupLit,MapKey,Result,SepStyle};
+use crate::lang::string::*;
 
 #[inline]
 pub fn to_vec<T: Serialize>(value: &T) -> Result<Vec<u8>> {
@@ -32,16 +33,14 @@ pub fn to_writer<'a, 'b, W:Write, T: Serialize>(writer: W, value: &'a T) -> Resu
                                                   true_lit:  "true",
                                                   false_lit: "false",
                                                   null_lit:  "null",
-                                                  strser: PhpStringSerializer::new()});
+                                                  strser: PhpStringSerializer{} });
     serializer.serialize(value)
 }
 
-use crate::lang::string::*;
-
 struct PhpStringSerializer;
 
-impl PhpStringSerializer {
-    fn new() -> StringSerializer<'static> {
+impl<'a> StringSerializer<'a> for PhpStringSerializer {
+    fn quote_styles(&self) -> Vec<QuoteStyle<'static>> {
         use array_lit::vec;
         let dq_esc = vec![Esc::No; 128; {
             [0]: [ Esc::Hex as u8; 32 ],
@@ -80,23 +79,22 @@ impl PhpStringSerializer {
             (Ascii::LF   as usize): Esc::No,
         }];
 
-        StringSerializer::new()
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("'"),
-                                         escapes: EscapeTable::try_from(&sq_esc).expect("sq_esc"),
-                                         catenate: Some("+"), // Not built in but we can fake it
-                                         multiline: Multiline::No, })
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("\""),
-                                         escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
-                                         catenate: Some("+"),
-                                         multiline: Multiline::No, })
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::HereDoc("<<<{NAME}", "{NAME}"),
-                                         escapes: EscapeTable::try_from(dq_here_esc).expect("dq_here_esc"),
-                                         catenate: None,
-                                         multiline: Multiline::Indent, })
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::HereDoc("<<<'{NAME}'", "{NAME}"),
-                                         escapes: EscapeTable::try_from(sq_here_esc).expect("sq_here_esc"),
-                                         catenate: None,
-                                         multiline: Multiline::Indent, })
+        vec![QuoteStyle{ rep: QuoteRep::Same("'"),
+                         escapes: EscapeTable::try_from(&sq_esc).expect("sq_esc"),
+                         catenate: Some("+"), // Not built in but we can fake it
+                         multiline: Multiline::No, },
+             QuoteStyle{ rep: QuoteRep::Same("\""),
+                         escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
+                         catenate: Some("+"),
+                         multiline: Multiline::No, },
+             QuoteStyle{ rep: QuoteRep::HereDoc("<<<{NAME}", "{NAME}"),
+                         escapes: EscapeTable::try_from(dq_here_esc).expect("dq_here_esc"),
+                         catenate: None,
+                         multiline: Multiline::Indent, },
+             QuoteStyle{ rep: QuoteRep::HereDoc("<<<'{NAME}'", "{NAME}"),
+                         escapes: EscapeTable::try_from(sq_here_esc).expect("sq_here_esc"),
+                         catenate: None,
+                         multiline: Multiline::Indent, }]
     }
 }
 
@@ -354,7 +352,7 @@ mod test_other {
 
 #[cfg(test)]
 mod test_strings {
-    use super::PhpStringSerializer as StringSerializer;
+    use super::PhpStringSerializer as TestStringSerializer;
     use crate::str_test;
 
     str_test!(test_control_characters,

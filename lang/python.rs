@@ -4,6 +4,7 @@ use serde::Serialize;
 use std::io::Write;
 
 use crate::lang::serializer::{Serializer,Language,ArrLit,MapLit,TupLit,MapKey,Result,SepStyle};
+use crate::lang::string::*;
 
 #[inline]
 pub fn to_vec<T: Serialize>(value: &T) -> Result<Vec<u8>> {
@@ -32,16 +33,14 @@ pub fn to_writer<'a, 'b, W:Write, T: Serialize>(writer: W, value: &'a T) -> Resu
                                                   true_lit:  "True",
                                                   false_lit: "False",
                                                   null_lit:  "None",
-                                                  strser: PythonStringSerializer::new(),},);
+                                                  strser: PythonStringSerializer{} ,},);
     serializer.serialize(value)
 }
 
-use crate::lang::string::*;
-
 struct PythonStringSerializer;
 
-impl PythonStringSerializer {
-    fn new() -> StringSerializer<'static> {
+impl<'a> StringSerializer<'a> for PythonStringSerializer {
+    fn quote_styles(&self) -> Vec<QuoteStyle<'static>> {
         use array_lit::vec;
         // https://docs.python.org/3/reference/lexical_analysis.html#string-and-bytes-literals
         let dq_esc = vec![Esc::No; 128; {
@@ -82,23 +81,22 @@ impl PythonStringSerializer {
         tsq_esc['"'  as usize] = Esc::No;
         tsq_esc['\'' as usize] = Esc::Rep('\'');
 
-        StringSerializer::new()
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("\""),
-                                         escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
-                                         catenate: Some("\\"),
-                                         multiline: Multiline::No, })
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("'"),
-                                         escapes: EscapeTable::try_from(&sq_esc).expect("sq_esc"),
-                                         catenate: Some("\\"),
-                                         multiline: Multiline::No, })
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same(r#"""""#), // """
-                                         escapes: EscapeTable::try_from(tdq_esc).expect("tdq_esc"),
-                                         catenate: Some("\\"),
-                                         multiline: Multiline::Yes, })
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("'''"),
-                                         escapes: EscapeTable::try_from(tsq_esc).expect("tsq_esc"),
-                                         catenate: Some("\\"),
-                                         multiline: Multiline::Yes, })
+        vec![QuoteStyle{ rep: QuoteRep::Same("\""),
+                         escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
+                         catenate: Some("\\"),
+                         multiline: Multiline::No, },
+             QuoteStyle{ rep: QuoteRep::Same("'"),
+                         escapes: EscapeTable::try_from(&sq_esc).expect("sq_esc"),
+                         catenate: Some("\\"),
+                         multiline: Multiline::No, },
+             QuoteStyle{ rep: QuoteRep::Same(r#"""""#), // """
+                         escapes: EscapeTable::try_from(tdq_esc).expect("tdq_esc"),
+                         catenate: Some("\\"),
+                         multiline: Multiline::Yes, },
+             QuoteStyle{ rep: QuoteRep::Same("'''"),
+                         escapes: EscapeTable::try_from(tsq_esc).expect("tsq_esc"),
+                         catenate: Some("\\"),
+                         multiline: Multiline::Yes, }]
     }
 }
 
@@ -356,7 +354,7 @@ mod test_other {
 
 #[cfg(test)]
 mod test_strings {
-    use super::PythonStringSerializer as StringSerializer;
+    use super::PythonStringSerializer as TestStringSerializer;
     use crate::str_test;
 
     str_test!(test_control_characters,r#""""\x00\x01\x02\x03\x04\x05\x06\a\b	

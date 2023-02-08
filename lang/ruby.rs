@@ -4,6 +4,7 @@ use serde::Serialize;
 use std::io::Write;
 
 use crate::lang::serializer::{Serializer,Language,ArrLit,MapLit,TupLit,MapKey,Result,SepStyle};
+use crate::lang::string::*;
 
 #[inline]
 pub fn to_vec<T: Serialize>(value: &T) -> Result<Vec<u8>> {
@@ -32,16 +33,14 @@ pub fn to_writer<'a, 'b, W:Write, T: Serialize>(writer: W, value: &'a T) -> Resu
                                                   true_lit:  "true",
                                                   false_lit: "false",
                                                   null_lit:  "nil",
-                                                  strser: RubyStringSerializer::new(),},);
+                                                  strser: RubyStringSerializer{},},);
     serializer.serialize(value)
 }
 
-use crate::lang::string::*;
-
 struct RubyStringSerializer;
 
-impl RubyStringSerializer {
-    fn new() -> StringSerializer<'static> {
+impl<'a> StringSerializer<'a> for RubyStringSerializer {
+    fn quote_styles(&self) -> Vec<QuoteStyle<'static>> {
         use array_lit::vec;
         let dq_esc = vec![Esc::No; 128; {
             [0]: [ Esc::Hex as u8; 32 ],
@@ -99,65 +98,66 @@ impl RubyStringSerializer {
             (Ascii::LF   as usize): Esc::No,
         }];
 
-        StringSerializer::new()
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("'"),
-                                         escapes: EscapeTable::try_from(&sq_esc).expect("sq_esc"),
-                                         catenate: Some("\\"),
-                                         multiline: Multiline::No, })
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("\""),
-                                         escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
-                                         catenate: Some("\\"),
-                                         multiline: Multiline::No, })
-            .add_quote_styles([("%Q{","}"),
-                               ("%Q[","]"),
-                               ("%Q(",")"),
-                               ("%Q<",">"),
-                               ("%Q/","/"),
-                               ("%Q|","|"),
-                               ("%Q!","!"),
-                               ("%Q@","@"),
-                               ("%Q#","#"),
-                               ("%Q%","%"),
-                               ("%Q,",","),
-                               ("%Q_","_"),
-                               ("%Q.","."),
-                               ("%Q*","*"),
-                               ("%Q^","^"),
-                              ].into_iter().map(|(start, end)| {
-                                  QuoteStyle{ rep: QuoteRep::Pair(start, end),
-                                              escapes: ruby_percent_dq_escapes(end.chars().next().unwrap()),
-                                              catenate: None,
-                                              multiline: Multiline::No, }
-                              }).collect())
-            .add_quote_styles([("%q{","}"),
-                               ("%q[","]"),
-                               ("%q(",")"),
-                               ("%q<",">"),
-                               ("%q/","/"),
-                               ("%q|","|"),
-                               ("%q!","!"),
-                               ("%q@","@"),
-                               ("%q#","#"),
-                               ("%q%","%"),
-                               ("%q,",","),
-                               ("%q_","_"),
-                               ("%q.","."),
-                               ("%q*","*"),
-                               ("%q^","^"),
-                              ].into_iter().map(|(start, end)| {
-                                  QuoteStyle{ rep: QuoteRep::Pair(start, end),
-                                              escapes: ruby_percent_sq_escapes(end.chars().next().unwrap()),
-                                              catenate: None,
-                                              multiline: Multiline::No, }
-                              }).collect())
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::HereDoc("<<~{NAME}", "{NAME}"),
-                                         escapes: EscapeTable::try_from(dq_here_esc).expect("dq_here_esc"),
-                                         catenate: None,
-                                         multiline: Multiline::Indent, })
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::HereDoc("<<~'{NAME}'", "{NAME}"),
-                                         escapes: EscapeTable::try_from(sq_here_esc).expect("sq_here_esc"),
-                                         catenate: None,
-                                         multiline: Multiline::Indent, })
+        let mut styles = vec![];
+        styles.extend([QuoteStyle{ rep: QuoteRep::Same("'"),
+                                escapes: EscapeTable::try_from(&sq_esc).expect("sq_esc"),
+                                catenate: Some("\\"),
+                                multiline: Multiline::No, },
+                    QuoteStyle{ rep: QuoteRep::Same("\""),
+                                escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
+                                catenate: Some("\\"),
+                                multiline: Multiline::No, }]);
+        styles.extend([("%Q{","}"),
+                    ("%Q[","]"),
+                    ("%Q(",")"),
+                    ("%Q<",">"),
+                    ("%Q/","/"),
+                    ("%Q|","|"),
+                    ("%Q!","!"),
+                    ("%Q@","@"),
+                    ("%Q#","#"),
+                    ("%Q%","%"),
+                    ("%Q,",","),
+                    ("%Q_","_"),
+                    ("%Q.","."),
+                    ("%Q*","*"),
+                    ("%Q^","^"),
+                   ].into_iter().map(|(start, end)| {
+                       QuoteStyle{ rep: QuoteRep::Pair(start, end),
+                                   escapes: ruby_percent_dq_escapes(end.chars().next().unwrap()),
+                                   catenate: None,
+                                   multiline: Multiline::No, }
+                   }));
+        styles.extend([("%q{","}"),
+                    ("%q[","]"),
+                    ("%q(",")"),
+                    ("%q<",">"),
+                    ("%q/","/"),
+                    ("%q|","|"),
+                    ("%q!","!"),
+                    ("%q@","@"),
+                    ("%q#","#"),
+                    ("%q%","%"),
+                    ("%q,",","),
+                    ("%q_","_"),
+                    ("%q.","."),
+                    ("%q*","*"),
+                    ("%q^","^"),
+                   ].into_iter().map(|(start, end)| {
+                       QuoteStyle{ rep: QuoteRep::Pair(start, end),
+                                   escapes: ruby_percent_sq_escapes(end.chars().next().unwrap()),
+                                   catenate: None,
+                                   multiline: Multiline::No, }
+                   }));
+        styles.extend([QuoteStyle{ rep: QuoteRep::HereDoc("<<~{NAME}", "{NAME}"),
+                                escapes: EscapeTable::try_from(dq_here_esc).expect("dq_here_esc"),
+                                catenate: None,
+                                multiline: Multiline::Indent, },
+                    QuoteStyle{ rep: QuoteRep::HereDoc("<<~'{NAME}'", "{NAME}"),
+                                escapes: EscapeTable::try_from(sq_here_esc).expect("sq_here_esc"),
+                                catenate: None,
+                                multiline: Multiline::Indent, }]);
+        styles
     }
 }
 
@@ -426,7 +426,7 @@ mod test_other {
 
 #[cfg(test)]
 mod test_strings {
-    use super::RubyStringSerializer as StringSerializer;
+    use super::RubyStringSerializer as TestStringSerializer;
     use crate::str_test;
 
     str_test!(test_control_characters,

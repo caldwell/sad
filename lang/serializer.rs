@@ -114,7 +114,7 @@ pub enum SepStyle {
     Trailing,
 }
 
-pub struct Language {
+pub struct Language<S: StringSerializer<'static>> {
     pub array_lit: ArrLit,
     pub tuple_lit: TupLit,
     pub map_lit:   MapLit,
@@ -123,19 +123,19 @@ pub struct Language {
     pub true_lit:  &'static str,
     pub false_lit: &'static str,
     pub null_lit:  &'static str,
-    pub strser:    StringSerializer<'static>,
+    pub strser:    S,
 }
 
-pub struct Serializer<W> {
+pub struct Serializer<W,S: StringSerializer<'static>> {
     op: VecDeque<Opcode>,
     output: WriterWithLineLen<W>,
     prefix: String,
     indent: String,
-    lang: Language,
+    lang: Language<S>,
 }
 
-impl<W: Write> Serializer<W> {
-    pub fn new(writer: W, language: Language) -> Serializer<W> {
+impl<W: Write, S:StringSerializer<'static>> Serializer<W,S> {
+    pub fn new(writer: W, language: Language<S>) -> Serializer<W, S> {
         Serializer {
             op: VecDeque::new(),
             output: WriterWithLineLen::new(writer),
@@ -309,13 +309,13 @@ impl<W: Write> Serializer<W> {
     }
 }
 
-impl<'a, W: Write> std::ops::AddAssign<&str> for Serializer<W> {
+impl<'a, W: Write, S:StringSerializer<'static>> std::ops::AddAssign<&str> for Serializer<W,S> {
     fn add_assign(&mut self, s: &str) {
         self.out(s);
     }
 }
 
-impl<'a, W: Write> ser::Serializer for &'a mut Serializer<W> {
+impl<'a, W: Write, S:StringSerializer<'static>> ser::Serializer for &'a mut Serializer<W,S> {
     type Ok = ();
     type Error = Error;
     type SerializeSeq = Self;
@@ -435,7 +435,7 @@ impl<'a, W: Write> ser::Serializer for &'a mut Serializer<W> {
     }
 }
 
-impl<'a, W: Write> ser::SerializeSeq for &'a mut Serializer<W> {
+impl<'a, W: Write, S:StringSerializer<'static>> ser::SerializeSeq for &'a mut Serializer<W,S> {
     type Ok = ();
     type Error = Error;
 
@@ -463,7 +463,7 @@ impl<'a, W: Write> ser::SerializeSeq for &'a mut Serializer<W> {
     }
 }
 
-impl<'a, W: Write> ser::SerializeTuple for &'a mut Serializer<W> {
+impl<'a, W: Write, S:StringSerializer<'static>> ser::SerializeTuple for &'a mut Serializer<W,S> {
     type Ok = ();
     type Error = Error;
 
@@ -490,7 +490,7 @@ impl<'a, W: Write> ser::SerializeTuple for &'a mut Serializer<W> {
     }
 }
 
-impl<'a, W: Write> ser::SerializeTupleStruct for &'a mut Serializer<W> {
+impl<'a, W: Write, S:StringSerializer<'static>> ser::SerializeTupleStruct for &'a mut Serializer<W,S> {
     type Ok = ();
     type Error = Error;
 
@@ -512,7 +512,7 @@ impl<'a, W: Write> ser::SerializeTupleStruct for &'a mut Serializer<W> {
     }
 }
 
-impl<'a, W: Write> ser::SerializeTupleVariant for &'a mut Serializer<W> {
+impl<'a, W: Write, S:StringSerializer<'static>> ser::SerializeTupleVariant for &'a mut Serializer<W,S> {
     type Ok = ();
     type Error = Error;
 
@@ -535,7 +535,7 @@ impl<'a, W: Write> ser::SerializeTupleVariant for &'a mut Serializer<W> {
 }
 
 
-impl<'a, W: Write> ser::SerializeMap for &'a mut Serializer<W> {
+impl<'a, W: Write, S:StringSerializer<'static>> ser::SerializeMap for &'a mut Serializer<W,S> {
     type Ok = ();
     type Error = Error;
 
@@ -566,7 +566,7 @@ impl<'a, W: Write> ser::SerializeMap for &'a mut Serializer<W> {
     }
 }
 
-impl<'a, W: Write> ser::SerializeStruct for &'a mut Serializer<W> {
+impl<'a, W: Write, S:StringSerializer<'static>> ser::SerializeStruct for &'a mut Serializer<W,S> {
     type Ok = ();
     type Error = Error;
 
@@ -590,7 +590,7 @@ impl<'a, W: Write> ser::SerializeStruct for &'a mut Serializer<W> {
     }
 }
 
-impl<'a, W: Write> ser::SerializeStructVariant for &'a mut Serializer<W> {
+impl<'a, W: Write, S:StringSerializer<'static>> ser::SerializeStructVariant for &'a mut Serializer<W,S> {
     type Ok = ();
     type Error = Error;
 

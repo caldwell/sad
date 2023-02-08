@@ -4,6 +4,7 @@ use serde::Serialize;
 use std::io::Write;
 
 use crate::lang::serializer::{Serializer,Language,ArrLit,MapLit,TupLit,MapKey,Result,SepStyle};
+use crate::lang::string::*;
 
 #[inline]
 pub fn to_vec<T: Serialize>(value: &T) -> Result<Vec<u8>> {
@@ -32,16 +33,14 @@ pub fn to_writer<'a, 'b, W:Write, T: Serialize>(writer: W, value: &'a T) -> Resu
                                                   true_lit:  "true",
                                                   false_lit: "false",
                                                   null_lit:  "nil",
-                                                  strser: GoStringSerializer::new()});
+                                                  strser: GoStringSerializer{} });
     serializer.serialize(value)
 }
 
-use crate::lang::string::*;
-
 struct GoStringSerializer;
 
-impl GoStringSerializer {
-    fn new() -> StringSerializer<'static> {
+impl<'a> StringSerializer<'a> for GoStringSerializer {
+    fn quote_styles(&self) -> Vec<QuoteStyle<'static>> {
         use array_lit::vec;
         let dq_esc = vec![Esc::No; 128; {
             [0]: [ Esc::Hex as u8; 32 ],
@@ -61,15 +60,14 @@ impl GoStringSerializer {
             ('`' as usize): Esc::Ill,
         }];
 
-        StringSerializer::new()
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("\""),
-                                         escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
-                                         catenate: Some("+"),
-                                         multiline: Multiline::No, })
-            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("`"),
-                                         escapes: EscapeTable::try_from(&bt_esc).expect("bt_esc"),
-                                         catenate: Some("+"), // Not built in but we can fake it
-                                         multiline: Multiline::No, })
+        vec![QuoteStyle{ rep: QuoteRep::Same("\""),
+                         escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
+                         catenate: Some("+"),
+                         multiline: Multiline::No, },
+             QuoteStyle{ rep: QuoteRep::Same("`"),
+                         escapes: EscapeTable::try_from(&bt_esc).expect("bt_esc"),
+                         catenate: Some("+"), // Not built in but we can fake it
+                         multiline: Multiline::No, }]
     }
 }
 
@@ -329,7 +327,7 @@ mod test_other {
 
 #[cfg(test)]
 mod test_strings {
-    use super::GoStringSerializer as StringSerializer;
+    use super::GoStringSerializer as TestStringSerializer;
     use crate::str_test;
 
     str_test!(test_control_characters,
