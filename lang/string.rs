@@ -129,6 +129,7 @@ pub enum QuoteRep<'a> {
     Pair(&'a str, &'a str),    // Start and end are different
     HereDoc(&'a str, &'a str), // Start and end are templates "{NAME}" gets replaced with a heredoc style all-uppercase word
 }
+
 #[derive(Debug, Clone)]
 #[allow(unused)]
 pub enum Multiline {
@@ -136,7 +137,8 @@ pub enum Multiline {
     Yes,
     Indent,
 }
-#[derive(Debug, Clone)]
+
+#[derive(Debug)]
 pub struct QuoteStyle<'a> {
     pub rep:       QuoteRep<'a>,
     pub escapes:   EscapeTable,
@@ -174,7 +176,7 @@ impl<T:Default + PartialOrd, W:Default> Lowest<T,W> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct StringSerializer<'a> {
     styles: Vec<QuoteStyle<'a>>,
 }
@@ -182,14 +184,14 @@ pub struct StringSerializer<'a> {
 impl<'a> StringSerializer<'a> {
 
     pub fn new() -> StringSerializer<'a> { StringSerializer{ styles: Vec::new() } }
-    pub fn add_quote_style(mut self, style: &QuoteStyle<'a>) -> Self {
-        self.styles.push(style.clone());
+    pub fn add_quote_style(mut self, style: QuoteStyle<'a>) -> Self {
+        self.styles.push(style);
         self
     }
 
-    pub fn add_quote_styles(mut self, styles: &Vec<QuoteStyle<'a>>) -> Self {
+    pub fn add_quote_styles(mut self, styles: Vec<QuoteStyle<'a>>) -> Self {
         for s in styles {
-            self.styles.push(s.clone());
+            self.styles.push(s);
         }
         self
     }

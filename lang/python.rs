@@ -83,22 +83,22 @@ impl PythonStringSerializer {
         tsq_esc['\'' as usize] = Esc::Rep('\'');
 
         StringSerializer::new()
-            .add_quote_style(&QuoteStyle{ rep: QuoteRep::Same("\""),
-                                          escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
-                                          catenate: Some("\\"),
-                                          multiline: Multiline::No, })
-            .add_quote_style(&QuoteStyle{ rep: QuoteRep::Same("'"),
-                                          escapes: EscapeTable::try_from(&sq_esc).expect("sq_esc"),
-                                          catenate: Some("\\"),
-                                          multiline: Multiline::No, })
-            .add_quote_style(&QuoteStyle{ rep: QuoteRep::Same(r#"""""#), // """
-                                          escapes: EscapeTable::try_from(tdq_esc).expect("tdq_esc"),
-                                          catenate: Some("\\"),
-                                          multiline: Multiline::Yes, })
-            .add_quote_style(&QuoteStyle{ rep: QuoteRep::Same("'''"),
-                                          escapes: EscapeTable::try_from(tsq_esc).expect("tsq_esc"),
-                                          catenate: Some("\\"),
-                                          multiline: Multiline::Yes, })
+            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("\""),
+                                         escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
+                                         catenate: Some("\\"),
+                                         multiline: Multiline::No, })
+            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("'"),
+                                         escapes: EscapeTable::try_from(&sq_esc).expect("sq_esc"),
+                                         catenate: Some("\\"),
+                                         multiline: Multiline::No, })
+            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same(r#"""""#), // """
+                                         escapes: EscapeTable::try_from(tdq_esc).expect("tdq_esc"),
+                                         catenate: Some("\\"),
+                                         multiline: Multiline::Yes, })
+            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("'''"),
+                                         escapes: EscapeTable::try_from(tsq_esc).expect("tsq_esc"),
+                                         catenate: Some("\\"),
+                                         multiline: Multiline::Yes, })
     }
 }
 

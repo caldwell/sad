@@ -81,22 +81,22 @@ impl PhpStringSerializer {
         }];
 
         StringSerializer::new()
-            .add_quote_style(&QuoteStyle{ rep: QuoteRep::Same("'"),
-                                          escapes: EscapeTable::try_from(&sq_esc).expect("sq_esc"),
-                                          catenate: Some("+"), // Not built in but we can fake it
-                                          multiline: Multiline::No, })
-            .add_quote_style(&QuoteStyle{ rep: QuoteRep::Same("\""),
-                                          escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
-                                          catenate: Some("+"),
-                                          multiline: Multiline::No, })
-            .add_quote_style(&QuoteStyle{ rep: QuoteRep::HereDoc("<<<{NAME}", "{NAME}"),
-                                          escapes: EscapeTable::try_from(dq_here_esc).expect("dq_here_esc"),
-                                          catenate: None,
-                                          multiline: Multiline::Indent, })
-            .add_quote_style(&QuoteStyle{ rep: QuoteRep::HereDoc("<<<'{NAME}'", "{NAME}"),
-                                          escapes: EscapeTable::try_from(sq_here_esc).expect("sq_here_esc"),
-                                          catenate: None,
-                                          multiline: Multiline::Indent, })
+            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("'"),
+                                         escapes: EscapeTable::try_from(&sq_esc).expect("sq_esc"),
+                                         catenate: Some("+"), // Not built in but we can fake it
+                                         multiline: Multiline::No, })
+            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("\""),
+                                         escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
+                                         catenate: Some("+"),
+                                         multiline: Multiline::No, })
+            .add_quote_style(QuoteStyle{ rep: QuoteRep::HereDoc("<<<{NAME}", "{NAME}"),
+                                         escapes: EscapeTable::try_from(dq_here_esc).expect("dq_here_esc"),
+                                         catenate: None,
+                                         multiline: Multiline::Indent, })
+            .add_quote_style(QuoteStyle{ rep: QuoteRep::HereDoc("<<<'{NAME}'", "{NAME}"),
+                                         escapes: EscapeTable::try_from(sq_here_esc).expect("sq_here_esc"),
+                                         catenate: None,
+                                         multiline: Multiline::Indent, })
     }
 }
 

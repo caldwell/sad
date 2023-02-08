@@ -62,14 +62,14 @@ impl GoStringSerializer {
         }];
 
         StringSerializer::new()
-            .add_quote_style(&QuoteStyle{ rep: QuoteRep::Same("\""),
-                                          escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
-                                          catenate: Some("+"),
-                                          multiline: Multiline::No, })
-            .add_quote_style(&QuoteStyle{ rep: QuoteRep::Same("`"),
-                                          escapes: EscapeTable::try_from(&bt_esc).expect("bt_esc"),
-                                          catenate: Some("+"), // Not built in but we can fake it
-                                          multiline: Multiline::No, })
+            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("\""),
+                                         escapes: EscapeTable::try_from(&dq_esc).expect("dq_esc"),
+                                         catenate: Some("+"),
+                                         multiline: Multiline::No, })
+            .add_quote_style(QuoteStyle{ rep: QuoteRep::Same("`"),
+                                         escapes: EscapeTable::try_from(&bt_esc).expect("bt_esc"),
+                                         catenate: Some("+"), // Not built in but we can fake it
+                                         multiline: Multiline::No, })
     }
 }
 
