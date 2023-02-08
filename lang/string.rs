@@ -128,6 +128,7 @@ pub enum QuoteRep<'a> {
     Same(&'a str),             // Start and end are the same
     Pair(&'a str, &'a str),    // Start and end are different
     HereDoc(&'a str, &'a str), // Start and end are templates "{NAME}" gets replaced with a heredoc style all-uppercase word
+    Bare,                      // Bare word string, with validator function
 }
 
 #[derive(Debug, Clone)]
@@ -178,6 +179,7 @@ impl<T:Default + PartialOrd, W:Default> Lowest<T,W> {
 
 pub trait StringSerializer<'a> {
     fn quote_styles(&self, ) -> Vec<QuoteStyle<'a>>;
+    fn valid_bare_str(&self, _s: &str) -> bool { true }
 
     fn serialize(&self, s: &str, prefix: &str, name: Option<&str>) -> String {
         #[derive(Default, Debug)]
@@ -199,6 +201,7 @@ pub trait StringSerializer<'a> {
         let stats: Vec<_> = styles.iter().enumerate().filter_map(|(i,quote)| {
             let mut stats = Stats::default();
             let (startlen, endlen) = match (&quote.rep, &quote.multiline) {
+                (QuoteRep::Bare, _)                           => if self.valid_bare_str(s) { (0, 0) } else { return None },
                 (QuoteRep::Same(s),       _)                  => (s.len(), s.len()),
                 (QuoteRep::Pair(s,e),     _)                  => (s.len(), e.len()),
                 (QuoteRep::HereDoc(_, _), Multiline::No)      => panic!("Makes no sense."),
@@ -263,6 +266,7 @@ pub trait StringSerializer<'a> {
         let mut heredoc_str_end:   String;
 
         let (start, end) = match (&quote.rep, &quote.multiline) {
+            (QuoteRep::Bare, _)      => ("",""),
             (QuoteRep::Same(s), _)  => (*s,*s),
             (QuoteRep::Pair(s,e), _) => (*s,*e),
             (QuoteRep::HereDoc(_, _), Multiline::No)      => panic!("Makes no sense."),
