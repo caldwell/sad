@@ -6,4 +6,4 @@ pub mod ruby;
 pub mod php;
 pub mod go;
 pub mod python;
-
+pub mod puppet;

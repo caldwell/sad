@@ -27,8 +27,8 @@ to guess the input format from the `<in-file>` extension.
 
 #### `-o` `--out=<format>`
 
-Select output format.  One of: `json` `yaml` `toml` `ruby` `php` `go`
-`python`. If not specified it try to guess from the `<out-file>` extension. If
+Select output format.  One of: `json` `yaml` `toml` `ruby` `php` `go` `python`
+`puppet`. If not specified it try to guess from the `<out-file>` extension. If
 there is no `<out-file>` then it will use the input format.
 
 #### `-u` `--ugly`

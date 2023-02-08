@@ -26,7 +26,7 @@ Options:
                      the <in-file> extension.
 
   -o --out=<format>  Select output format.
-                     One of: json yaml toml ruby php go python
+                     One of: json yaml toml ruby php go python puppet
                      If not specified it try to guess from the <out-file>
                      extension. If there is no <out-file> then it will use the
                      input format.
@@ -55,6 +55,7 @@ enum Format {
     Php,
     Go,
     Python,
+    Puppet,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -128,6 +129,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         (Some(Format::Php),  _)     => lang::php::to_writer(outf, &data)?,
         (Some(Format::Go),   _)     => lang::go::to_writer(outf, &data)?,
         (Some(Format::Python),_)    => lang::python::to_writer(outf, &data)?,
+        (Some(Format::Puppet),_)    => lang::puppet::to_writer(outf, &data)?,
         (None,_) => unreachable!(),
     }
 
