@@ -329,7 +329,6 @@ pub trait StringSerializer<'a> {
                                                                            rep += prefix;
                                                                            pos = prefix.len(); }
                 (Esc::No,  Multiline::Yes) |
-                (Esc::No,  Multiline::Indent) if c == '\t'            => { rep.push(c); pos += 1; }
                 (Esc::No,  _)                                         => { rep.push(c); pos += 1; },
                 (Esc::Hex, _)                                         => { rep += &format!(r"\x{:02x}", c as u8); pos += 4; }
                 (Esc::Oct, _)                                         => { rep += &format!(r"\{:03o}",  c as u8); pos += 4; }
